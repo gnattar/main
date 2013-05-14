@@ -3361,10 +3361,10 @@ end
 
 tags = find(ismember(CaSig_trialnums,common_trialnums));
 ind = zeros(length(tags),1);
-ind (find(ismember(tags,sorted_CaTrials.hits)))=1;
-ind (find(ismember(tags,sorted_CaTrials.cr)))=3;
-ind (find(ismember(tags,sorted_CaTrials.misses)))=2;
-ind (find(ismember(tags,sorted_CaTrials.fa)))=4;
+ind (find(ismember(common_trialnums,sorted_CaTrials.hits)))=1;
+ind (find(ismember(common_trialnums,sorted_CaTrials.cr)))=3;
+ind (find(ismember(common_trialnums,sorted_CaTrials.misses)))=2;
+ind (find(ismember(common_trialnums,sorted_CaTrials.fa)))=4;
 [Y,indorder] = sort(ind,'ascend');
 % nogotrials = [indorder(Y==3); indorder(Y==4)];
 CaSig_tags = tags(indorder);
@@ -3476,7 +3476,7 @@ end
                 temp=contacttimes{i}{1,pickedcontact(j)}(ind);%for now just the first contact after bartime
                 if(temp/wSigframerate<=baseline)&&(allcontacts>1)                   
                     contactind(j) = contacttimes{i}{1,(j+1)}(1);
-                elseif(contactind(j)/wSigframerate<=baseline)&&(allcontacts==1)
+                elseif(temp/wSigframerate<=baseline)&&(allcontacts==1)
                     contactind(j) = ceil(baseline*wSigframerate)+1;
                 else
                     contactind(j) =temp;% for now just the first contact
