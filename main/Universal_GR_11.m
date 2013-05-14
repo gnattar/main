@@ -2702,6 +2702,7 @@ end
 % --- Executes on button press in plotroiSignals.
 function plotroiSignals_Callback(hObject, eventdata, handles)
 global CaTrials 
+global sorted_CaTrials
 fov = get(handles.fov,'String');
 roislist = get(handles.roislist,'String');
 rois = str2num(roislist);
@@ -2716,7 +2717,7 @@ if(get(handles.CaTrials_select,'Value') ==1)
     trialtypes = ones(length(CaTrials),1);
     plot_roiSignals(CaTrials,fov,rois,roislist,tag_trialtypes,trialtypes,sfx);
 elseif(get(handles.sorted_CaTrials_select,'Value') ==1)
-    global sorted_CaTrials    
+%     global sorted_CaTrials    
     tag_trialtypes =1;
     sfx = 'Bsort';
     count =0;
@@ -2797,6 +2798,7 @@ elseif(get(handles.sorted_CaTrials_select,'Value') ==1)
 else(get(handles.contact_CaSignal_select,'Value')==1)
    
     global contact_CaTrials 
+
     
     tag_trialtypes =0;
     sfx ='Csort';
@@ -2805,7 +2807,7 @@ else(get(handles.contact_CaSignal_select,'Value')==1)
     
 
 
-           %% sort by bar_pos_trial
+         %% sort by bar_pos_trial
         tag_trialtypes =1;
         sfx = 'CSort_barpos';
         count =0;
@@ -2821,10 +2823,10 @@ else(get(handles.contact_CaSignal_select,'Value')==1)
           count = count +length(inds);
         end
       
-        trialorder  = [sorted_CaTrials.touch(touchinds) , sorted_CaTrials.notouch(notouchinds)]; 
-        disp('order = touch_barpos_Ant(Top)-Post(Bottom) notouch_barpos_Ant(Top)-Post(Bottom)')      
+%         trialorder  = [sorted_CaTrials.touch(touchinds) ];%, sorted_CaTrials.notouch(notouchinds)]; 
+         disp('order = touch_barpos_Ant(Top)-Post(Bottom)');% notouch_barpos_Ant(Top)-Post(Bottom)')      
     
-        plot_roiSignals(contact_CaTrials(trialorder),fov,rois,roislist,tag_trialtypes,trialtypes,sfx);
+        plot_roiSignals(contact_CaTrials(touchinds),fov,rois,roislist,tag_trialtypes,trialtypes,sfx);
 end
 
 
