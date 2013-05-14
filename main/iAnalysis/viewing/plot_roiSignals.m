@@ -1,6 +1,6 @@
 function plot_roiSignals(obj,fov,rois,roislist,tag_trialtypes,trialtypes,sfx)
 % plot signals arranged by rois : to check roi selection in fovs
-plotsperrow=10;
+plotsperrow = 9;;
 fovname = ['fov ' fov 'rois ' roislist]; 
 frametime=obj.FrameTime;
 rois_trials  = arrayfun(@(x) x.dff, obj,'uniformoutput',false);

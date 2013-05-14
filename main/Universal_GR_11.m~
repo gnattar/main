@@ -2811,7 +2811,7 @@ else(get(handles.contact_CaSignal_select,'Value')==1)
         trialtypes = ones(length(contact_CaTrials),1);
         
         touchinds = zeros(length(contact_CaTrials),1);        
-        barpositions1 = [ unique(contact_CaTrials.barpos')];       
+        barpositions1 = unique(cell2mat(arrayfun(@(x) x.barpos, contact_CaTrials, 'uniformoutput',false)))];       
         for i=1:length(barpositions1)            
           inds= find(contact_CaTrials.barpos==barpositions1(i)) ;
           touchinds(count+1:count+length(inds))=inds;
@@ -3374,7 +3374,9 @@ wSig_tags=tags(indorder);
 trialnums=common_trialnums(indorder);% wrt CaTrials indices
 trialinds = 1:length(trialnums);
 %% removing contacttimes outside bar available time
-contacttimes=cellfun(@(x) x.contacts{whiskerID}, wSigTrials(wSig_tags(trialinds)),'uniformoutput',false);
+ contacttimes=cellfun(@(x) x.contacts{whiskerID}, wSigTrials(wSig_tags(trialinds)),'uniformoutput',false);
+
+
 for i = 1: length(trialnums)
            barOntime= CaTrials(CaSig_tags(i)).behavTrial.pinDescentOnsetTime;
            barOfftime=CaTrials(CaSig_tags(i)).behavTrial.pinAscentOnsetTime;
@@ -3382,24 +3384,29 @@ for i = 1: length(trialnums)
 %            extraneouscontacts = contacttimes
 end
 
-%% removing all trials with low theta: these are clear errors in contact detection , fix better later
-    nogotrials = [find(Y==3); find(Y==4)];
-    thetavals=cellfun(@(x) x.theta{whiskerID}, wSigTrials(wSig_tags(nogotrials)),'uniformoutput',false);  
-    contacttimes=cellfun(@(x) x.contacts{whiskerID}, wSigTrials(wSig_tags(nogotrials)),'uniformoutput',false);
-    velocity=cellfun(@(x) x.Velocity{whiskerID}, wSigTrials(wSig_tags(nogotrials)),'uniformoutput',false);  
-    deltaKappa=cellfun(@(x) x.deltaKappa{whiskerID}, wSigTrials(wSig_tags(nogotrials)),'uniformoutput',false);  
-    ts_wsk=cellfun(@(x) x.time{whiskerID}, wSigTrials(wSig_tags(nogotrials)),'uniformoutput',false);  
-    contactdir=cellfun(@(x) x.contact_direct{whiskerID}, wSigTrials(wSig_tags(nogotrials)),'uniformoutput',false);  
-    for i=1:length(nogotrials)
-        if (~isempty(contacttimes{i}))
-           ind = contacttimes{i}{1}(1);           
-           if (thetavals{i}(ind)<0)
-               deletelist(i) = nogotrials(i);
-           end
-        end
-    end
+% % % % %% removing all trials with low theta: these are clear errors in contact detection , fix better later
+% % % %     nogotrials = [find(Y==3); find(Y==4)];
+% % % %     thetavals=cellfun(@(x) x.theta{whiskerID}, wSigTrials(wSig_tags(nogotrials)),'uniformoutput',false);  
+% % % %     contacttimes=cellfun(@(x) x.contacts{whiskerID}, wSigTrials(wSig_tags(nogotrials)),'uniformoutput',false);
+% % % %     velocity=cellfun(@(x) x.Velocity{whiskerID}, wSigTrials(wSig_tags(nogotrials)),'uniformoutput',false);  
+% % % %     deltaKappa=cellfun(@(x) x.deltaKappa{whiskerID}, wSigTrials(wSig_tags(nogotrials)),'uniformoutput',false);  
+% % % %     ts_wsk=cellfun(@(x) x.time{whiskerID}, wSigTrials(wSig_tags(nogotrials)),'uniformoutput',false);  
+% % % %     contactdir=cellfun(@(x) x.contact_direct{whiskerID}, wSigTrials(wSig_tags(nogotrials)),'uniformoutput',false);  
+% % % %     for i=1:length(nogotrials)
+% % % %         if (~isempty(contacttimes{i}))
+% % % %            ind = contacttimes{i}{1}(1);           
+% % % %            if (thetavals{i}(ind)<0)
+% % % %                deletelist(i) = nogotrials(i);
+% % % %            end
+% % % %         end
+% % % %     end
 
 %% removing all trials with no contact (try plotting only for this later)
+    contacttimes=cellfun(@(x) x.contacts{whiskerID}, wSigTrials(wSig_tags(trialinds)),'uniformoutput',false);
+     numtrials = size(contacttimes,2);
+    nocontacts = find(cellfun(@isempty,contacttimes));
+    trialinds(nocontacts) =[];   
+    
     contacttimes=cellfun(@(x) x.contacts{whiskerID}, wSigTrials(wSig_tags(trialinds)),'uniformoutput',false);
     thetavals=cellfun(@(x) x.theta{whiskerID}, wSigTrials(wSig_tags(trialinds)),'uniformoutput',false);  
     kappavals=cellfun(@(x) x.kappa{whiskerID}, wSigTrials(wSig_tags(trialinds)),'uniformoutput',false);  
@@ -3408,16 +3415,16 @@ end
     ts_wsk=cellfun(@(x) x.time{whiskerID}, wSigTrials(wSig_tags(trialinds)),'uniformoutput',false);  
     contactdir=cellfun(@(x) x.contact_direct{whiskerID}, wSigTrials(wSig_tags(trialinds)),'uniformoutput',false);  
     
-    numtrials = size(contacttimes,2);
-    nocontacts = find(cellfun(@isempty,contacttimes));
-    trialinds(nocontacts) =[];
-    contacttimes(cellfun(@isempty,contacttimes)) = [];  
-    thetavals(cellfun(@isempty,contacttimes)) = [];
-    kappavals(cellfun(@isempty,contacttimes)) = [];
-    velocity(cellfun(@isempty,contacttimes)) = [];
-    deltaKappa(cellfun(@isempty,contacttimes)) = [];
-    ts_wsk(cellfun(@isempty,contacttimes)) = [];
-    contactdir(cellfun(@isempty,contacttimes))=[];
+% % % % %     numtrials = size(contacttimes,2);
+% % % % %     nocontacts = find(cellfun(@isempty,contacttimes));
+% % % % %     trialinds(nocontacts) =[];
+% % % % %     contacttimes(cellfun(@isempty,contacttimes)) = [];  
+% % % % %     thetavals(cellfun(@isempty,contacttimes)) = [];
+% % % % %     kappavals(cellfun(@isempty,contacttimes)) = [];
+% % % % %     velocity(cellfun(@isempty,contacttimes)) = [];
+% % % % %     deltaKappa(cellfun(@isempty,contacttimes)) = [];
+% % % % %     ts_wsk(cellfun(@isempty,contacttimes)) = [];
+% % % % %     contactdir(cellfun(@isempty,contacttimes))=[];
    
     trialnums(nocontacts) = [];
     wSig_tags(nocontacts)=[];
@@ -3476,7 +3483,7 @@ end
                 temp=contacttimes{i}{1,pickedcontact(j)}(ind);%for now just the first contact after bartime
                 if(temp/wSigframerate<=baseline)&&(allcontacts>1)                   
                     contactind(j) = contacttimes{i}{1,(j+1)}(1);
-                elseif(contactind(j)/wSigframerate<=baseline)&&(allcontacts==1)
+                elseif(temp/wSigframerate<=baseline)&&(allcontacts==1)
                     contactind(j) = ceil(baseline*wSigframerate)+1;
                 else
                     contactind(j) =temp;% for now just the first contact

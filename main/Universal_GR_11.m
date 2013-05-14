@@ -2796,7 +2796,8 @@ elseif(get(handles.sorted_CaTrials_select,'Value') ==1)
     end
 else(get(handles.contact_CaSignal_select,'Value')==1)
    
-    global contact_CaTrials
+    global contact_CaTrials 
+    
     tag_trialtypes =0;
     sfx ='Csort';
     trialtypes = ones(length(contact_CaTrials),1);
@@ -2804,22 +2805,23 @@ else(get(handles.contact_CaSignal_select,'Value')==1)
     
 
 
-            %% sort by bar_pos_trial
+           %% sort by bar_pos_trial
         tag_trialtypes =1;
         sfx = 'CSort_barpos';
         count =0;
         trialtypes = ones(length(contact_CaTrials),1);
         
         touchinds = zeros(length(contact_CaTrials),1);        
-        barpositions1 = [ unique(contact_CaTrials.barpos')];       
+        barposall=cell2mat(arrayfun(@(x) x.barpos, contact_CaTrials, 'uniformoutput',false));
+        barpositions1 = unique(barposall);
         for i=1:length(barpositions1)            
-          inds= find(contact_CaTrials.barpos==barpositions1(i)) ;
+          inds= find(barposall==barpositions1(i)) ;
           touchinds(count+1:count+length(inds))=inds;
           trialtypes(count+1:count+length(inds)) = i;         
           count = count +length(inds);
         end
       
-        trialorder  = [contact_CaTrials.touch(touchinds) , sorted_CaTrials.notouch(notouchinds)]; 
+        trialorder  = [sorted_CaTrials.touch(touchinds) , sorted_CaTrials.notouch(notouchinds)]; 
         disp('order = touch_barpos_Ant(Top)-Post(Bottom) notouch_barpos_Ant(Top)-Post(Bottom)')      
     
         plot_roiSignals(contact_CaTrials(trialorder),fov,rois,roislist,tag_trialtypes,trialtypes,sfx);
@@ -3361,10 +3363,10 @@ end
 
 tags = find(ismember(CaSig_trialnums,common_trialnums));
 ind = zeros(length(tags),1);
-ind (find(ismember(common_trialnums,sorted_CaTrials.hits)))=1;
-ind (find(ismember(common_trialnums,sorted_CaTrials.cr)))=3;
-ind (find(ismember(common_trialnums,sorted_CaTrials.misses)))=2;
-ind (find(ismember(common_trialnums,sorted_CaTrials.fa)))=4;
+ind (find(ismember(tags,sorted_CaTrials.hits)))=1;
+ind (find(ismember(tags,sorted_CaTrials.cr)))=3;
+ind (find(ismember(tags,sorted_CaTrials.misses)))=2;
+ind (find(ismember(tags,sorted_CaTrials.fa)))=4;
 [Y,indorder] = sort(ind,'ascend');
 % nogotrials = [indorder(Y==3); indorder(Y==4)];
 CaSig_tags = tags(indorder);
@@ -3374,7 +3376,9 @@ wSig_tags=tags(indorder);
 trialnums=common_trialnums(indorder);% wrt CaTrials indices
 trialinds = 1:length(trialnums);
 %% removing contacttimes outside bar available time
-contacttimes=cellfun(@(x) x.contacts{whiskerID}, wSigTrials(wSig_tags(trialinds)),'uniformoutput',false);
+ contacttimes=cellfun(@(x) x.contacts{whiskerID}, wSigTrials(wSig_tags(trialinds)),'uniformoutput',false);
+
+
 for i = 1: length(trialnums)
            barOntime= CaTrials(CaSig_tags(i)).behavTrial.pinDescentOnsetTime;
            barOfftime=CaTrials(CaSig_tags(i)).behavTrial.pinAscentOnsetTime;
@@ -3382,24 +3386,29 @@ for i = 1: length(trialnums)
 %            extraneouscontacts = contacttimes
 end
 
-%% removing all trials with low theta: these are clear errors in contact detection , fix better later
-    nogotrials = [find(Y==3); find(Y==4)];
-    thetavals=cellfun(@(x) x.theta{whiskerID}, wSigTrials(wSig_tags(nogotrials)),'uniformoutput',false);  
-    contacttimes=cellfun(@(x) x.contacts{whiskerID}, wSigTrials(wSig_tags(nogotrials)),'uniformoutput',false);
-    velocity=cellfun(@(x) x.Velocity{whiskerID}, wSigTrials(wSig_tags(nogotrials)),'uniformoutput',false);  
-    deltaKappa=cellfun(@(x) x.deltaKappa{whiskerID}, wSigTrials(wSig_tags(nogotrials)),'uniformoutput',false);  
-    ts_wsk=cellfun(@(x) x.time{whiskerID}, wSigTrials(wSig_tags(nogotrials)),'uniformoutput',false);  
-    contactdir=cellfun(@(x) x.contact_direct{whiskerID}, wSigTrials(wSig_tags(nogotrials)),'uniformoutput',false);  
-    for i=1:length(nogotrials)
-        if (~isempty(contacttimes{i}))
-           ind = contacttimes{i}{1}(1);           
-           if (thetavals{i}(ind)<0)
-               deletelist(i) = nogotrials(i);
-           end
-        end
-    end
+% % % % %% removing all trials with low theta: these are clear errors in contact detection , fix better later
+% % % %     nogotrials = [find(Y==3); find(Y==4)];
+% % % %     thetavals=cellfun(@(x) x.theta{whiskerID}, wSigTrials(wSig_tags(nogotrials)),'uniformoutput',false);  
+% % % %     contacttimes=cellfun(@(x) x.contacts{whiskerID}, wSigTrials(wSig_tags(nogotrials)),'uniformoutput',false);
+% % % %     velocity=cellfun(@(x) x.Velocity{whiskerID}, wSigTrials(wSig_tags(nogotrials)),'uniformoutput',false);  
+% % % %     deltaKappa=cellfun(@(x) x.deltaKappa{whiskerID}, wSigTrials(wSig_tags(nogotrials)),'uniformoutput',false);  
+% % % %     ts_wsk=cellfun(@(x) x.time{whiskerID}, wSigTrials(wSig_tags(nogotrials)),'uniformoutput',false);  
+% % % %     contactdir=cellfun(@(x) x.contact_direct{whiskerID}, wSigTrials(wSig_tags(nogotrials)),'uniformoutput',false);  
+% % % %     for i=1:length(nogotrials)
+% % % %         if (~isempty(contacttimes{i}))
+% % % %            ind = contacttimes{i}{1}(1);           
+% % % %            if (thetavals{i}(ind)<0)
+% % % %                deletelist(i) = nogotrials(i);
+% % % %            end
+% % % %         end
+% % % %     end
 
 %% removing all trials with no contact (try plotting only for this later)
+    contacttimes=cellfun(@(x) x.contacts{whiskerID}, wSigTrials(wSig_tags(trialinds)),'uniformoutput',false);
+     numtrials = size(contacttimes,2);
+    nocontacts = find(cellfun(@isempty,contacttimes));
+    trialinds(nocontacts) =[];   
+    
     contacttimes=cellfun(@(x) x.contacts{whiskerID}, wSigTrials(wSig_tags(trialinds)),'uniformoutput',false);
     thetavals=cellfun(@(x) x.theta{whiskerID}, wSigTrials(wSig_tags(trialinds)),'uniformoutput',false);  
     kappavals=cellfun(@(x) x.kappa{whiskerID}, wSigTrials(wSig_tags(trialinds)),'uniformoutput',false);  
@@ -3408,16 +3417,16 @@ end
     ts_wsk=cellfun(@(x) x.time{whiskerID}, wSigTrials(wSig_tags(trialinds)),'uniformoutput',false);  
     contactdir=cellfun(@(x) x.contact_direct{whiskerID}, wSigTrials(wSig_tags(trialinds)),'uniformoutput',false);  
     
-    numtrials = size(contacttimes,2);
-    nocontacts = find(cellfun(@isempty,contacttimes));
-    trialinds(nocontacts) =[];
-    contacttimes(cellfun(@isempty,contacttimes)) = [];  
-    thetavals(cellfun(@isempty,contacttimes)) = [];
-    kappavals(cellfun(@isempty,contacttimes)) = [];
-    velocity(cellfun(@isempty,contacttimes)) = [];
-    deltaKappa(cellfun(@isempty,contacttimes)) = [];
-    ts_wsk(cellfun(@isempty,contacttimes)) = [];
-    contactdir(cellfun(@isempty,contacttimes))=[];
+% % % % %     numtrials = size(contacttimes,2);
+% % % % %     nocontacts = find(cellfun(@isempty,contacttimes));
+% % % % %     trialinds(nocontacts) =[];
+% % % % %     contacttimes(cellfun(@isempty,contacttimes)) = [];  
+% % % % %     thetavals(cellfun(@isempty,contacttimes)) = [];
+% % % % %     kappavals(cellfun(@isempty,contacttimes)) = [];
+% % % % %     velocity(cellfun(@isempty,contacttimes)) = [];
+% % % % %     deltaKappa(cellfun(@isempty,contacttimes)) = [];
+% % % % %     ts_wsk(cellfun(@isempty,contacttimes)) = [];
+% % % % %     contactdir(cellfun(@isempty,contacttimes))=[];
    
     trialnums(nocontacts) = [];
     wSig_tags(nocontacts)=[];
