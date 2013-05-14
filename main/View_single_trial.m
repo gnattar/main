@@ -136,10 +136,13 @@ trNo = currenttrial;
     wskNo = '2';
     ts_wsk = obj(trNo).ts_wsk{1};
       ts_wsk =ts_wsk-ts_wsk(1);  
-    % Plot Ca signal trial
-   
+
+      % Plot Ca signal trial
+     contacts=obj(trNo).contacts{1};
+      barOnOff =  barOnOff-(contacts/500)+ 0.5;
      licks=obj(trNo).licks;
      lickTime_trial = licks(licks >3);
+     lickTime_trial = lickTime_trial - (contacts/500)+ 0.5;
 
     ha(1) = subaxis(5,1,1, 'sv', 0.05);
 %     setpt = sesObj.wsArray.wl_trials{trNo}.Setpoint{wskNo};
@@ -148,11 +151,10 @@ trNo = currenttrial;
 %     ylabel('Setpoint','fontsize',15)
     ylabel('Kappa','fontsize',15);
     set(gca,'XMinorTick','on','XTick',0:.2:6);
-    
-    if(~isempty(obj(trNo).contactdir))
-            condir= num2str(obj(trNo).contactdir{1});
-    else
-            condir='nocontact';
+    condir= num2str(obj(trNo).contactdir{1});
+    if(isempty(condir))
+        condir='nocontact';
+        
     end
 % %     title(sprintf('Trial %d, ROI %d, wsk %d, %s',trNo, roiNo, wskNo, trType), 'fontsize',20)
      title(sprintf('%d:Trial %s, dFFmean(%s) %s   %s ',trNo,soloTrNo,roiName,trType,condir), 'fontsize',20);
@@ -162,23 +164,28 @@ trNo = currenttrial;
     plot(ts, dff, 'k','linewidth',2)
     line([lickTime_trial'; lickTime_trial'], ...
         [zeros(1,length(lickTime_trial)); ones(1,length(lickTime_trial))*20],'color','m','linewidth',2)
-    line([barOnOff; barOnOff], [0 0; 100 100], 'color','c','linewidth',2);
+    if(barOnOff(1)>0)
+        line([barOnOff(1); barOnOff(1)], [0 0; 100 100], 'color','c','linewidth',2);
+    end
+    if (barOnOff(2)<3.5)
+    line([barOnOff(2); barOnOff(2)], [0 0; 100 100], 'color','b','linewidth',2);
+    end
     ylabel('dF/F','fontsize',15)
     ylim(yl_dff);    set(gca,'XMinorTick','on','XTick',0:.2:6);
     
     ha(3) = subaxis(5,1,3, 'sv', 0.05);
     dKappa = obj(trNo).deltaKappa{1};
     plot(ts_wsk,dKappa,'r');
-    contacts=obj(trNo).contacts{1};
+
     if(~isempty(contacts))
          numcontacts = size(contacts,2);   
         for i = 1:numcontacts
             if(iscell(contacts))
-                ithcontact=contacts{i};
+                ithcontact=contacts{i}-contacts{1}+250; %with respect to the first contact being fixed at .5s
             else
-               ithcontact=contacts(i);
+               ithcontact=contacts(i)-contacts(1)+250;
             end
-            ithcontact=ithcontact/500;
+            ithcontact=(ithcontact/500);
             line([ithcontact;ithcontact],[zeros(1,length(ithcontact))+.5;ones(1,length(ithcontact))*5],'color',[.6 .5 0],'linewidth',.5)
    
         end
