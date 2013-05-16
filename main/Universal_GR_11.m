@@ -22,7 +22,7 @@ function varargout = Universal_GR_11(varargin)
 
 % Edit the above text to modify the response to help Universal_GR_11
  
-% Last Modified by GUIDE v2.5 28-Jan-2013 00:00:09
+% Last Modified by GUIDE v2.5 15-May-2013 19:30:01
 
 % Begin initialization code - DO NOT EDIT
 
@@ -2707,6 +2707,24 @@ fov = get(handles.fov,'String');
 roislist = get(handles.roislist,'String');
 rois = str2num(roislist);
 
+if(isempty(CaTrials))   
+    [filename,pathName]=uigetfile('CaSignal*.mat','Load CaSignal.mat file')
+    if isequal(filename, 0) || isequal(pathName,0)
+        'No CaTrial loaded!'
+         return
+    end
+    load( [pathName filesep filename], '-mat');
+end
+
+if(isempty(sorted_CaTrials))   
+    [filename,pathName]=uigetfile('sorted_CaSignal*.mat','Load sorted_CaSignal.mat file')
+    if isequal(filename, 0) || isequal(pathName,0)
+        'No sorted_CaTrial loaded!'
+         return
+    end
+    load( [pathName filesep filename], '-mat');
+end
+
 if (length(rois) > CaTrials(1).nROIs)
     rois = 1:CaTrials(1).nROIs;
     set(handles.roislist,'String',num2str(rois));
@@ -3417,19 +3435,7 @@ end
     velocity=cellfun(@(x) x.Velocity{whiskerID}, wSigTrials(wSig_tags(trialinds)),'uniformoutput',false);  
     deltaKappa=cellfun(@(x) x.deltaKappa{whiskerID}, wSigTrials(wSig_tags(trialinds)),'uniformoutput',false);  
     ts_wsk=cellfun(@(x) x.time{whiskerID}, wSigTrials(wSig_tags(trialinds)),'uniformoutput',false);  
-    contactdir=cellfun(@(x) x.contact_direct{whiskerID}, wSigTrials(wSig_tags(trialinds)),'uniformoutput',false);  
-    
-% % % % %     numtrials = size(contacttimes,2);
-% % % % %     nocontacts = find(cellfun(@isempty,contacttimes));
-% % % % %     trialinds(nocontacts) =[];
-% % % % %     contacttimes(cellfun(@isempty,contacttimes)) = [];  
-% % % % %     thetavals(cellfun(@isempty,contacttimes)) = [];
-% % % % %     kappavals(cellfun(@isempty,contacttimes)) = [];
-% % % % %     velocity(cellfun(@isempty,contacttimes)) = [];
-% % % % %     deltaKappa(cellfun(@isempty,contacttimes)) = [];
-% % % % %     ts_wsk(cellfun(@isempty,contacttimes)) = [];
-% % % % %     contactdir(cellfun(@isempty,contacttimes))=[];
-   
+    contactdir=cellfun(@(x) x.contact_direct{whiskerID}, wSigTrials(wSig_tags(trialinds)),'uniformoutput',false); 
     trialnums(nocontacts) = [];
     wSig_tags(nocontacts)=[];
     CaSig_tags(nocontacts)=[];
@@ -3450,17 +3456,7 @@ end
             CaSig(:,1:size(tempmat,2),i) = tempmat(:,:);
           end      
     end
-
-
-    % % % function[contact_CaSig]= extract_contact_sorted_CaSig(trialinds,wSigTrials,wSig_tags,CaSig,CaSig_tags,whiskerID)
-
-% % %     contacttimes=cellfun(@(x) x.contacts{whiskerID}, wSigTrials(wSig_tags(trialinds)),'uniformoutput',false);
-% % %     numtrials = size(contacttimes,2);
-% % %     numrois = size(CaSig,1);
-% % %     nocontacts = find(cellfun(@isempty,contacttimes));
-% % %     trialinds(nocontacts) =[];
-% % %     contacttimes(cellfun(@isempty,contacttimes)) = [];
-%     firstcontacts = cell(numtrials,1); 
+ 
     Caframetime = CaTrials.FrameTime;
     baseline = 0.5;
     dur = 3.0;
@@ -3473,11 +3469,17 @@ end
                                        'licks', {},'poleposition',{},'nROIs',{},'theta',{},'kappa',{},'velocity',{},...
                                    'deltaKappa',{},'ts_wsk',{},'contactdir',{},'barpos',{});
     count=0;
-
+    handles.aligned_contact = get(handles.align_to_first_touch,'Value'); % 1 for first 
+    
     for i = 1:numtrials
-            allcontacts = size(contacttimes{i},2); 
-             pickedcontact=1; %first contact
-%                pickedcontact=allcontacts;%last contact
+            allcontacts = size(contacttimes{i},2);
+            if get(handles.align_to_first_touch,'Value')
+                 pickedcontact=1; %first contact
+                 contact_CaSig_tag = 'Ftouch';
+            elseif get(handles.align_to_last_touch,'Value');
+                 pickedcontact=allcontacts;%last contact
+                 contact_CaSig_tag = 'Ltouch';
+            end
             numcontacts = 1;
             contactind = zeros(numcontacts,1);
             for j=1:numcontacts
@@ -3577,7 +3579,8 @@ end
             contact_CaTrials(count).CaSigTrialind=CaTrials(CaSig_tags(i)).TrialNo;
             contact_CaTrials(count).TrialName= TrialName;
             contact_CaTrials(count).nROIs = numrois;
-            contact_CaTrials(count).contacts={contactind};
+%             contact_CaTrials(count).contacts={contactind};
+            contact_CaTrials(count).contacts={horzcat(contacttimes{i}{:})};
             contact_CaTrials(count).barpos = wSigTrials{wSig_tags(i)}.bar_pos_trial(1,1);%cellfun(@(x) x.bar_pos_trial(1,1), wSigTrials(wSig_tags),'uniformoutput',false);
 
             switch(Y(i))
@@ -3605,8 +3608,8 @@ sorted_CaTrials.contact_trialnums = trialnums;
 sorted_CaTrials.contact_trialtypes = Y;
 
 
-save('contact_CaTrials','contact_CaTrials');
-save('sorted_CaTrials','sorted_CaTrials');
+save(['contact_CaTrials' contact_CaSig_tag],'contact_CaTrials');
+save('sorted_CaTrials', 'sorted_CaTrials');
 
 
 
@@ -4571,4 +4574,19 @@ function current_bartheta_CreateFcn(hObject, eventdata, handles)
 
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in align_to_first_touch.
+function align_to_first_touch_Callback(hObject, eventdata, handles)
+handles.aligned_contact = get(handles.align_to_first_touch,'Value'); 
+if handles.aligned_contact
+    set(handles.align_to_last_touch,'Value',0);
+end
+
+% --- Executes on button press in align_to_last_touch.
+function align_to_last_touch_Callback(hObject, eventdata, handles)
+handles.aligned_contact = get(handles.align_to_last_touch,'Value'); 
+if handles.aligned_contact
+    set(handles.align_to_first_touch,'Value',0);
 end

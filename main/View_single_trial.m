@@ -139,10 +139,10 @@ trNo = currenttrial;
 
       % Plot Ca signal trial
      contacts=obj(trNo).contacts{1};
-      barOnOff =  barOnOff-(contacts/500)+ 0.5;
+      barOnOff =  barOnOff-(contacts(1)/500)+ 0.5;
      licks=obj(trNo).licks;
      lickTime_trial = licks(licks >3);
-     lickTime_trial = lickTime_trial - (contacts/500)+ 0.5;
+     lickTime_trial = lickTime_trial - (contacts(1)/500)+ 0.5;
 
     ha(1) = subaxis(5,1,1, 'sv', 0.05);
 %     setpt = sesObj.wsArray.wl_trials{trNo}.Setpoint{wskNo};
