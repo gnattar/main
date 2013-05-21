@@ -23,7 +23,8 @@ nROIs = length(ROInums);
 CaTraces = zeros(length(CaTrials), CaTrials(1).nFrames, nROIs);
 for  i = 1:nROIs
     for j = 1:length(CaTrials)
-        traces(j,:) = CaTrials(j).CaTrace_raw(:,ROInums(i));
+%         traces(j,:) = CaTrials(j).CaTrace_raw(:,ROInums(i));
+        traces(j,:) = CaTrials(j).f_raw(:,ROInums(i));
     end
    
     switch flag

@@ -94,35 +94,70 @@ function[w_setpoint_trials,w_setpoint_early,w_setpoint_late,w_setpoint_trials_me
                     setpoint = obj{t}.Setpoint{1,1};
                     amp     = obj{t}.Amplitude{1,1};
 
-                    setpoint_trials(count,[1:frames])=setpoint;
-                    amp_trials(count,[1:frames])=amp;
 
 
 
-                    temp = setpoint(round(restrictTime(1)/frameTime)-150:round(restrictTime(1)/frameTime)-50); %100points prewhisk
-                    setpoint_trials_prewhisk(count,1) = mean(temp);
-                    temp = amp(round(restrictTime(1)/frameTime):round(restrictTime(2)/frameTime));
-                    time = xt(round(restrictTime(1)/frameTime):round(restrictTime(2)/frameTime));
-                    points=prctile(temp,[90,100]);
-                    ind=find(points(1)<temp & temp<points(2));
 
-                     ampvals = temp(ind);
-                     amp_trials_med(count,1)=mean(ampvals);
+%%plot setpoint
+%                 if((max(setpoint(round(restrictTime(1)/frameTime):round(restrictTime(2)/frameTime))<30))&&(min(setpoint(round(restrictTime(1)/frameTime):round(restrictTime(2)/frameTime))>-30)) )
 
-                     amp_trials_width(count,1) = sqrt(mean(ampvals.^2)-amp_trials_med(count,1).^2);
-                     temp = setpoint(round(restrictTime(1)/frameTime):round(restrictTime(2)/frameTime));
+                        temp = setpoint(round(restrictTime(1)/frameTime)-150:round(restrictTime(1)/frameTime)-50); %100points prewhisk
+                        setpoint_trials_prewhisk(count,1) = mean(temp);
 
+% % %                         subplot(numblocks*2,4,(blk-1)*4+1); plot(xt(round(restrictTime(1)/frameTime):round(restrictTime(2)/frameTime)),setpoint(round(restrictTime(1)/frameTime):round(restrictTime(2)/frameTime)),'color',col(i,:),'linewidth',1); axis ([restrictTime(1) restrictTime(2) -30 30]) ;
+% % %                         set(gca,'YTick',-30:10:30);set(gca,'YGrid','on');
+% % %                         hold on;
+                        
+                        
+                        setpoint_trials(count,[1:frames])=setpoint;
+                        amp_trials(count,[1:frames])=amp;
+                        
+ 
+                        temp = setpoint(round(restrictTime(1)/frameTime):round(restrictTime(2)/frameTime));
+                        time = xt(round(restrictTime(1)/frameTime):round(restrictTime(2)/frameTime));
+                        points=prctile(temp,[76,100]);
+                        ind=find(points(1)<temp & temp<points(2));
+                        setpointvals=temp(ind);
+                        timevals = time(ind);
+                        setpoint_trials_med(count,1)=mean(setpointvals); 
+                        setpoint_trials_width(count,1) = sqrt(mean(setpointvals.^2)-setpoint_trials_med(count,1).^2);
+                        setpoint_trials_dur(count,1)=max(timevals)-min(timevals);
+  
+                        
+                        %%plot amp                        
+% % %                         subplot(numblocks*2,4,(blk-1)*4+3); plot(xt(round(restrictTime(1)/frameTime):round(restrictTime(2)/frameTime)),amp(round(restrictTime(1)/frameTime):round(restrictTime(2)/frameTime)),'color',col(i,:),'linewidth',1); axis ([restrictTime(1) restrictTime(2) -5 25]) ;
+% % %                         set(gca,'YTick',-5:10:50);set(gca,'YGrid','on');
+% % %                         hold on;                                               
+                        temp = amp(round(restrictTime(1)/frameTime):round(restrictTime(2)/frameTime));
+                          ampvals = temp(ind);
+%                         ampvals = temp;
+%                         amphist = hist(temp,ampbins);
+%                         peak=find(amphist==max(amphist));
+%                         amp_trials_med(count,1)=range(ampvals);
+                          amp_trials_med(count,1)=median(ampvals);
 
-                    setpointvals=temp(ind);
-                    timevals = time(ind);
-                    setpoint_trials_med(count,1)=mean(setpointvals); 
-                    setpoint_trials_width(count,1) = sqrt(mean(setpointvals.^2)-setpoint_trials_med(count,1).^2);
-                    setpoint_trials_dur(count,1)=max(timevals)-min(timevals);                 
-                    count=count+1;
+                          amp_trials_width(count,1) = sqrt(mean(ampvals.^2)-amp_trials_med(count,1).^2);
+%                         amp_trials_width(count,2) = min(ampvals);
+%                         amp_trials_width(count,2) = max(ampvals);
+                        count=count+1;
+%                 else
+%                      disp(['too huge theta deviations' obj{t}.trackerFileName num2str(trialnums(i))])    
+%                 end
             end
         end
 
         hold off;
+%         colorbar('location','EastOutside');
+%         freezeColors;
+%         cbfreeze(colorbar);
+%%plot setpoint as image        
+% % %          xt = [1:maxframes]*frameTime;
+% % %         subplot(numblocks*2,3,(b-1)*3+2);imagesc(xt(round(restrictTime(1)/frameTime):round(restrictTime(2)/frameTime)),trialnums,setpoint_trials(:,round(restrictTime(1)/frameTime):round(restrictTime(2)/frameTime)));caxis([-30 30]);colormap(fireice);
+% % %         colorbar('location','EastOutside');
+% % %         freezeColors;
+% % %          cbfreeze(colorbar);
+
+
         avg_trials = floor(length(trialnums)/3);
         if(count-1<=avg_trials)
              avg_trials = count-2;
@@ -138,41 +173,38 @@ function[w_setpoint_trials,w_setpoint_early,w_setpoint_late,w_setpoint_trials_me
         
 
 %%plot setpoint averages       
-
+%         subplot(numblocks*2,4,(blk-1)*4+2);
        subplot(numblocks*2,2,(blk-1)*2+1);
        up = setpoint_trials_med(:,1)+setpoint_trials_width(:,1);
        low=setpoint_trials_med(:,1)-setpoint_trials_width(:,1);
-         jbfill(trialnums',up',low',[.8 .8 .8],[.8 .8 .8],1,.5);hold on;
-
-        plot(trialnums,setpoint_trials_med(:,1),'linewidth',1); hold on;
+         jbfill(trialnums',up',low',[0 .8 .8],[0 .8 .8],1,.5);hold on;
+%         jbfill(trialnums,up,low,[0 .8 .8],[0 .8 .8],1,.5);hold on;
+        plot(trialnums,setpoint_trials_med(:,1),'linewidth',1.5); hold on;
         windowSize=25;
-        grid on;
-
+%        smoothed=filter(ones(1,windowSize)/windowSize,1,setpoint_trials_med(:,1));
         data =setpoint_trials_med(:,1);
         binned = arrayfun( @(x) mean(data(x: min(x+windowSize-1,end) ),1), 1:windowSize:size(data,1), 'UniformOutput', false);
-        binned=cat(1,binned{:});
-        data =setpoint_trials_width(:,1);
-        binned_sdev = arrayfun( @(x) mean(data(x: min(x+windowSize-1,end) ),1), 1:windowSize:size(data,1), 'UniformOutput', false);
-        binned_sdev=cat(1,binned_sdev{:});
+         binned=cat(1,binned{:});
         xbins = arrayfun( @(x) mean(x:min(x+windowSize-1,size(data,1))), 1:windowSize:size(data,1), 'UniformOutput', false);
         xbins=floor(cat(1,xbins{:}));         
-%        plot(trialnums(xbins),binned,'linewidth',1.5,'color','k','Marker','o');hold on;
-        errorbar(trialnums(xbins),binned,binned_sdev,'linewidth',1.5,'color','k','Marker','o');hold on;
-        grid on; 
-        s = regstats(binned,trialnums(xbins),'linear','tstat');
-        pvalsetpoint  = s.tstat.pval(2); % test for non-zero slope of setpoint
-        title(['M:' obj{1}.mouseName ' S: ' obj{1}.sessionName ' Ttype: ' str 'Setpoint pval ' num2str(pvalsetpoint) ]);
+       plot(trialnums(xbins),binned,'linewidth',1.5,'color','k','Marker','o');hold on;
+       
+
 
          w_setpoint_trials_med(blk) = {horzcat(trialnums,setpoint_trials_med)}; %%median for restricted time window
          w_setpoint_trials_medbinned(blk) = {horzcat(trialnums(xbins),binned)}; %%median binned withi n restricted time window
          w_setpoint_trials_width(blk) = {setpoint_trials_width};
          
+       
+%         smoothed=filter(ones(1,windowSize)/windowSize,1,setpoint_trials_prewhisk(:,1));
         data = setpoint_trials_prewhisk(:,1);
         binned = arrayfun( @(x) mean(data(x: min(x+windowSize-1,end) ),1), 1:windowSize:size(data,1), 'UniformOutput', false);
         binned=cat(1,binned{:}); 
 
-       plot(trialnums(xbins),binned,'color','r','linewidth',1,'Marker','o');  grid on;      
+       plot(trialnums(xbins),binned,'color','r','linewidth',1,'Marker','o');       
         axis([min(trialnums) max(trialnums) -30 30]);
+         title(['M:' obj{1}.mouseName ' S: ' obj{1}.sessionName ' Ttype: ' str ' Bk: ' block_tags{blk} 'Setpoint' ]);
+
          w_setpoint_trials_dur(blk)= {setpoint_trials_dur};
          w_setpoint_trials_prewhisk(blk)= {horzcat(trialnums,setpoint_trials_prewhisk)};
          w_setpoint_trials_prewhiskbinned(blk)= {horzcat(trialnums(xbins),binned)};
@@ -181,29 +213,22 @@ function[w_setpoint_trials,w_setpoint_early,w_setpoint_late,w_setpoint_trials_me
           w_setpoint_early(blk) ={setpoint_trials(earlyinds,round(restrictTime(1)/frameTime):round(restrictTime(2)/frameTime))};
           w_setpoint_late(blk) ={setpoint_trials(lateinds,round(restrictTime(1)/frameTime):round(restrictTime(2)/frameTime))};
 
-%%plot amp      
+%%plot amphist        
 
         subplot(numblocks*2,2,(blk-1)*2+2);
-        up = amp_trials_med(:,1)+amp_trials_width(:,1);
-        low=amp_trials_med(:,1)-amp_trials_width(:,1);
-         jbfill(trialnums',up',low',[.8 .8 .8],[.8 .8 .8],1,.5);hold on;
-        plot(trialnums,amp_trials_med(:,1),'linewidth',1.5);hold on; grid on; title('Whisking Amplitude');
-         
-        windowSize=25;
 
+        plot(trialnums,amp_trials_med(:,1),'linewidth',1.5);hold on;
+        windowSize=25;
+      
+%        smoothed=filter(ones(1,windowSize)/windowSize,1,amp_trials_med(:,1));
         data = amp_trials_med(:,1);
         binned = arrayfun( @(x) mean(data(x: min(x+windowSize-1,end) ),1), 1:windowSize:size(data,1), 'UniformOutput', false);
         binned=cat(1,binned{:});  
-        data =amp_trials_width(:,1);
-        binned_sdev = arrayfun( @(x) mean(data(x: min(x+windowSize-1,end) ),1), 1:windowSize:size(data,1), 'UniformOutput', false);
-        binned_sdev=cat(1,binned_sdev{:});
-%        plot(trialnums(xbins),binned,'linewidth',1.5,'color','k','Marker','o'); grid on;
-        errorbar(trialnums(xbins),binned,binned_sdev,'linewidth',1.5,'color','k','Marker','o'); grid on;
+
+       plot(trialnums(xbins),binned,'linewidth',1.5,'color','k','Marker','o');
        axis([min(trialnums) max(trialnums) 0 30]);
-         s = regstats(binned,trialnums(xbins),'linear','tstat');
-         pvalamp  = s.tstat.pval(2); % test for non-zero slope of amp
-        title(['Whisking Amplitude pval ' num2str(pvalamp) ]);       
-        
+
+                 
          w_amp_trials(blk) = {amp_trials};  %%entire length
          w_amp_trials_med(blk) = {horzcat(trialnums,amp_trials_med)}; %%median for restricted time window
           w_amp_trials_medbinned(blk) = {horzcat(trialnums(xbins),binned)}; 
@@ -220,9 +245,9 @@ function[w_setpoint_trials,w_setpoint_early,w_setpoint_late,w_setpoint_trials_me
          xt=[1:size(setpoint_trials,2)]*frameTime;
          subplot(numblocks*2,2,(numblocks+blk-1)*2+1);plot(xt,setpoint_trials(earlyinds(1:2:end),:),'color',[.5 .5 .5],'linewidth',1); hold on;           
          plot(xt,setpoint_trials(lateinds(1:2:end),:),'color',[1 .5 .5],'linewidth',1); hold on;
-         plot(xt,avg_setpoint,'linewidth',1.5,'color','k');hold on; grid on;
+         plot(xt,avg_setpoint,'linewidth',1.5,'color','k');hold on;
          avg_setpoint = mean(setpoint_trials(lateinds,:),1);
-         plot(xt,avg_setpoint,'linewidth',1.5,'color','r'); grid on;
+         plot(xt,avg_setpoint,'linewidth',1.5,'color','r');
          hold off;
          axis([.3,4,-30,30]);set(gca,'YGrid','on');
          set(gca,'YTick',-30:10:30);
@@ -237,7 +262,7 @@ function[w_setpoint_trials,w_setpoint_early,w_setpoint_late,w_setpoint_trials_me
          plot(xt,amp_trials(lateinds(1:2:end),:),'color',[1 .5 .5],'linewidth',1); hold on;   
          plot(xt,avg_amp,'linewidth',1.5,'color','k');hold on;
          avg_amp = mean(amp_trials(lateinds,:),1);
-         plot(xt,avg_amp,'linewidth',1.5,'color','r'); grid on;
+         plot(xt,avg_amp,'linewidth',1.5,'color','r');
          hold off;
          axis([.3,4,0,40]);set(gca,'YGrid','on');
          set(gca,'YTick',-30:10:30);
@@ -249,58 +274,54 @@ function[w_setpoint_trials,w_setpoint_early,w_setpoint_late,w_setpoint_trials_me
       
         
         
-%     for(blk=1:numblocks)    
+    for(blk=1:numblocks)    
         
-  
+ % setpoint test for sig      
+         temp1= prctile(w_setpoint_early{blk},[81:100],2); temp1=temp1(:);
+         temp2 = prctile(w_setpoint_late{blk},[81:100],2); temp2=temp2(:);
+
+          [h,pvalsetpoint,ksstat]= kstest2(temp1,temp2,0.01,1); %(f2>f1)
+%          [pvalsetpoint,h] = ranksum(temp1,temp2,'alpha',.01);
+%          stats=mwwtest(temp1,temp2)
+%         [pval, k, K] = circ_kuipertest(temp1*pi/180, temp2*pi/180, 1, 1);
+        h1b=figure('Name','Set point histograms');  
+        plot(spbins,hist(temp1,spbins)/sum(hist(temp1,spbins)),'color','k','linewidth',3); hold on;  plot(spbins,hist(temp2,spbins)/sum(hist(temp2,spbins)),'color','r','linewidth',3);
+         axis([-30 30 0 .25]);set(gca,'XGrid','on');set(gca,'FontSize',10);set(gca,'YTick',[0:.05:.25]);
+        if(h)
+          title(['KS Test : h = ', num2str(h), ' p value ', num2str(pvalsetpoint), ' Separation ', num2str(ksstat)]); 
+        else
+          title(['KS Test : h = ', num2str(h), ' p value ', num2str(pvalsetpoint), ' Separation ', num2str(ksstat)]); 
+        end       
+%         legend(block_tags);
+ legend( sprintf('first %d trials',avg_trials),sprintf('last %d trials',avg_trials));
+        fnam=[str 'avg_setpoint_hist'];  
+        saveas(gcf,[fpath,filesep,fnam],'tif');
+        saveas(gcf,[fpath,filesep,fnam],'fig');
+        close(h1b);
+%% amp test for sig        
+         temp1 = prctile(w_amp_early{blk},[81:100],2); temp1=temp1(:);
+         temp2 = prctile(w_amp_late{blk},[81:100],2); temp2=temp2(:);
+
+          [h,pvalamp,ksstat]= kstest2(temp1,temp2,0.01,-1);
+%          [pvalamp,h] = ranksum(temp1,temp2,'alpha',.01);
+%          stats=mwwtest(temp1,temp2)
+%         [pval, k, K] = circ_kuipertest(temp1*pi/180, temp2*pi/180, 1, 1);
+        h1c=figure('Name','Amplitude histograms');  
+        plot(ampbins,hist(temp1,ampbins)/sum(hist(temp1,ampbins)),'color','k','linewidth',3); hold on;  plot(ampbins,hist(temp2,ampbins)/sum(hist(temp2,ampbins)),'color','r','linewidth',3);
+         axis([1 30 0 .25]);set(gca,'XGrid','on');set(gca,'FontSize',10);set(gca,'YTick',[0:.025:.25]);
+        if(h)
+          title(['KS Test : h = ', num2str(h), ' p value ', num2str(pvalamp), ' Separation ', num2str(ksstat)]); 
+        else
+          title(['KS Test : h = ', num2str(h), ' p value ', num2str(pvalamp), ' Separation ', num2str(ksstat)]); 
+        end       
+%         legend(block_tags);
+          legend( sprintf('first %d trials',avg_trials),sprintf('last %d trials',avg_trials));
+        fnam=[str 'avg_amp_hist'];  
+        saveas(gcf,[fpath,filesep,fnam],'tif');
+        saveas(gcf,[fpath,filesep,fnam],'fig');
+        close(h1c);
         
-        
-        
-        
-        
-        
-        
-        
-        
-        
-% % %  % setpoint test for sig      
-% % %          temp1= prctile(w_setpoint_early{blk},[81:100],2); temp1=temp1(:);
-% % %          temp2 = prctile(w_setpoint_late{blk},[81:100],2); temp2=temp2(:);
-% % % 
-% % %           [h,pvalsetpoint,ksstat]= kstest2(temp1,temp2,0.01,1); %(f2>f1)
-% % %         h1b=figure('Name','Set point histograms');  
-% % %         plot(spbins,hist(temp1,spbins)/sum(hist(temp1,spbins)),'color','k','linewidth',3); hold on;  plot(spbins,hist(temp2,spbins)/sum(hist(temp2,spbins)),'color','r','linewidth',3);
-% % %          axis([-30 30 0 .25]);set(gca,'XGrid','on');set(gca,'FontSize',10);set(gca,'YTick',[0:.05:.25]);
-% % %         if(h)
-% % %           title(['KS Test : h = ', num2str(h), ' p value ', num2str(pvalsetpoint), ' Separation ', num2str(ksstat)]); 
-% % %         else
-% % %           title(['KS Test : h = ', num2str(h), ' p value ', num2str(pvalsetpoint), ' Separation ', num2str(ksstat)]); 
-% % %         end       
-% % % 
-% % %  legend( sprintf('first %d trials',avg_trials),sprintf('last %d trials',avg_trials));
-% % %         fnam=[str 'avg_setpoint_hist'];  
-% % %         saveas(gcf,[fpath,filesep,fnam],'tif');
-% % %         saveas(gcf,[fpath,filesep,fnam],'fig');
-% % %         close(h1b);
-% % % %% amp test for sig        
-% % %          temp1 = prctile(w_amp_early{blk},[81:100],2); temp1=temp1(:);
-% % %          temp2 = prctile(w_amp_late{blk},[81:100],2); temp2=temp2(:);
-% % % 
-% % %           [h,pvalamp,ksstat]= kstest2(temp1,temp2,0.01,-1);
-% % %         h1c=figure('Name','Amplitude histograms');  
-% % %         plot(ampbins,hist(temp1,ampbins)/sum(hist(temp1,ampbins)),'color','k','linewidth',3); hold on;  plot(ampbins,hist(temp2,ampbins)/sum(hist(temp2,ampbins)),'color','r','linewidth',3);
-% % %          axis([1 30 0 .25]);set(gca,'XGrid','on');set(gca,'FontSize',10);set(gca,'YTick',[0:.025:.25]);
-% % %         if(h)
-% % %           title(['KS Test : h = ', num2str(h), ' p value ', num2str(pvalamp), ' Separation ', num2str(ksstat)]); 
-% % %         else
-% % %           title(['KS Test : h = ', num2str(h), ' p value ', num2str(pvalamp), ' Separation ', num2str(ksstat)]); 
-% % %         end       
-% % %          legend( sprintf('first %d trials',avg_trials),sprintf('last %d trials',avg_trials));
-% % %         fnam=[str 'avg_amp_hist'];  
-% % %         saveas(gcf,[fpath,filesep,fnam],'tif');
-% % %         saveas(gcf,[fpath,filesep,fnam],'fig');
-% % %         close(h1c);
-        
-%     end   
+    end   
         
      
     %% plot kappa

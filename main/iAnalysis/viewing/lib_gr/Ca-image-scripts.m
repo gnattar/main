@@ -1,7 +1,8 @@
 %% Get max delta projection over multi trials
 %% get data file names
-fpath = 'E:\DATA\ImagingData\Awake\Behavior_Imaging\NXJF31552\090420';
-fname_prefix = 'Den3_64_4x';
+% fpath = 'E:\DATA\ImagingData\Awake\Behavior_Imaging\NXJF31552\090420';
+fpath=pwd;
+fname_prefix = 'Image_Registration_1_anm181053_2013_02_19_17_main_';
 files = dir([fpath filesep fname_prefix '*']);
 %%
 for i = 1:length(files)
@@ -28,8 +29,8 @@ figure(gcf);
 imagesc(maxSum_trials, [0 300]);
 
 %% Plot Ca traces of multiple trials
-datapath = 'E:\DATA\ImagingData\Awake\Behavior_Imaging\NXJF31552\090420';
-fname_prefix = 'Den1_64_6x';
+datapath = fpath;
+fname_prefix = 'Image_Registration_1_anm181053_2013_02_19_17_main_';
 cd(datapath);
 Ca_results_file = dir([fname_prefix '_Result*']);
 results = {};

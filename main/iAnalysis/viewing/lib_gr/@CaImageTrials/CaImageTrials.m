@@ -53,9 +53,9 @@ classdef CaImageTrials < handle
                     obj(i).nFrames = CaTrials(trialNo).nFrames;
                     obj(i).FrameTime = CaTrials(trialNo).FrameTime;  % in ms
                     obj(i).nROIs = CaTrials(trialNo).nROIs;
-                    obj(i).ROIMask = CaTrials(trialNo).ROIinfo.ROIMask;
+%                     obj(i).ROIMask = CaTrials(trialNo).ROIinfo.ROIMask;
                     obj(i).ROIPos = CaTrials(trialNo).ROIinfo.ROIpos;
-                    obj(i).ROIType = CaTrials(trialNo).ROIinfo.ROIType(1:CaTrials(trialNo).nROIs);
+%                     obj(i).ROIType = CaTrials(trialNo).ROIinfo.ROIType(1:CaTrials(trialNo).nROIs);
                     
                     obj(i).DaqInfo = CaTrials(trialNo).DaqInfo; % header info of the image file
                     obj(i).nChannel = 1;

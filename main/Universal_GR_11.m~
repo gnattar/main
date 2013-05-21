@@ -2500,11 +2500,13 @@ function [barposmat,barposmatall]= prep(d,solo_obj,coordsatfirst,coordsatnext,ba
     if (length (whisknumind) == length(measnumind))
         if(length(whisknumind)== length (mp4numind))
             'OK go ahead with analysis'
-        else
-            err(['incomplete data:' num2str(length(whisknumind)) 'whiskers and' num2str(length(mp4numind)) 'mp4']);
+        else               
+
+            err(['incomplete data:' num2str(length(whisknumind)) 'whiskers and' num2str(length(mp4numind)) 'mp4']);            
             incomplete=1;
         end
     else
+            lookat = find((~ismember(measnumind, whisknumind)))
             err(['incomplete data:' num2str(length(whisknumind)) 'whiskers and' num2str(length(measnumind)) 'measurements']);
             incomplete =1;
     end
@@ -2707,6 +2709,24 @@ fov = get(handles.fov,'String');
 roislist = get(handles.roislist,'String');
 rois = str2num(roislist);
 
+if(isempty(CaTrials))   
+    [filename,pathName]=uigetfile('CaSignal*.mat','Load CaSignal.mat file')
+    if isequal(filename, 0) || isequal(pathName,0)
+        'No CaTrial loaded!'
+         return
+    end
+    load( [pathName filesep filename], '-mat');
+end
+
+if(isempty(sorted_CaTrials))   
+    [filename,pathName]=uigetfile('sorted_CaSignal*.mat','Load sorted_CaSignal.mat file')
+    if isequal(filename, 0) || isequal(pathName,0)
+        'No sorted_CaTrial loaded!'
+         return
+    end
+    load( [pathName filesep filename], '-mat');
+end
+
 if (length(rois) > CaTrials(1).nROIs)
     rois = 1:CaTrials(1).nROIs;
     set(handles.roislist,'String',num2str(rois));
@@ -2798,8 +2818,6 @@ elseif(get(handles.sorted_CaTrials_select,'Value') ==1)
 else(get(handles.contact_CaSignal_select,'Value')==1)
    
     global contact_CaTrials 
-
-    
     tag_trialtypes =0;
     sfx ='Csort';
     trialtypes = ones(length(contact_CaTrials),1);
@@ -2807,26 +2825,28 @@ else(get(handles.contact_CaSignal_select,'Value')==1)
     
 
 
-         %% sort by bar_pos_trial
-        tag_trialtypes =1;
-        sfx = 'CSort_barpos';
-        count =0;
-        trialtypes = ones(length(contact_CaTrials),1);
-        
-        touchinds = zeros(length(contact_CaTrials),1);        
-        barposall=cell2mat(arrayfun(@(x) x.barpos, contact_CaTrials, 'uniformoutput',false));
-        barpositions1 = unique(barposall);
-        for i=1:length(barpositions1)            
-          inds= find(barposall==barpositions1(i)) ;
-          touchinds(count+1:count+length(inds))=inds;
-          trialtypes(count+1:count+length(inds)) = i;         
-          count = count +length(inds);
-        end
-      
+     %% sort by bar_pos_trial
+    tag_trialtypes =1;
+    sfx = 'CSort_barpos';
+    count =0;
+    trialtypes = ones(length(contact_CaTrials),1);
+
+    touchinds = zeros(length(contact_CaTrials),1);        
+    barposall=cell2mat(arrayfun(@(x) x.barpos, contact_CaTrials, 'uniformoutput',false));
+    barpositions1 = unique(barposall);
+    for i=1:length(barpositions1)            
+      inds= find(barposall==barpositions1(i)) ;
+      touchinds(count+1:count+length(inds))=inds;
+      trialtypes(count+1:count+length(inds)) = i;         
+      count = count +length(inds);
+    end
+
 %         trialorder  = [sorted_CaTrials.touch(touchinds) ];%, sorted_CaTrials.notouch(notouchinds)]; 
-         disp('order = touch_barpos_Ant(Top)-Post(Bottom)');% notouch_barpos_Ant(Top)-Post(Bottom)')      
-    
-        plot_roiSignals(contact_CaTrials(touchinds),fov,rois,roislist,tag_trialtypes,trialtypes,sfx);
+     disp('order = touch_barpos_Ant(Top)-Post(Bottom)');% notouch_barpos_Ant(Top)-Post(Bottom)')      
+
+    plot_roiSignals(contact_CaTrials(touchinds),fov,rois,roislist,tag_trialtypes,trialtypes,sfx);
+        
+        
 end
 
 
@@ -3455,9 +3475,13 @@ end
     
     for i = 1:numtrials
             allcontacts = size(contacttimes{i},2);
-            if
-            pickedcontact=1; %first contact
-%                pickedcontact=allcontacts;%last contact
+            if get(handles.align_to_first_touch,'Value')
+                 pickedcontact=1; %first contact
+                 contact_CaSig_tag = 'Ftouch';
+            elseif get(handles.align_to_last_touch,'Value');
+                 pickedcontact=allcontacts;%last contact
+                 contact_CaSig_tag = 'Ltouch';
+            end
             numcontacts = 1;
             contactind = zeros(numcontacts,1);
             for j=1:numcontacts
@@ -3553,12 +3577,13 @@ end
             contact_CaTrials(count).ts_wsk={extractedts_wsk};
             contact_CaTrials(count).contactdir = {extractedcontactdir};
             contact_CaTrials(count).FrameTime = CaTrials(CaSig_tags(i)).FrameTime;
-            contact_CaTrials(count).nframes = numframes;
+            contact_CaTrials(count).nFrames = numframes;
             contact_CaTrials(count).CaSigTrialind=CaTrials(CaSig_tags(i)).TrialNo;
             contact_CaTrials(count).TrialName= TrialName;
             contact_CaTrials(count).nROIs = numrois;
+            contact_CaTrials(count).FileName_prefix=CaTrials(CaSig_tags(i)).FileName_prefix;
 %             contact_CaTrials(count).contacts={contactind};
-            contact_CaTrials(count).contacts={horzcat(contacttimes{i}{:})}
+            contact_CaTrials(count).contacts={horzcat(contacttimes{i}{:})};
             contact_CaTrials(count).barpos = wSigTrials{wSig_tags(i)}.bar_pos_trial(1,1);%cellfun(@(x) x.bar_pos_trial(1,1), wSigTrials(wSig_tags),'uniformoutput',false);
 
             switch(Y(i))
@@ -3586,8 +3611,8 @@ sorted_CaTrials.contact_trialnums = trialnums;
 sorted_CaTrials.contact_trialtypes = Y;
 
 
-save('contact_CaTrials','contact_CaTrials');
-save('sorted_CaTrials','sorted_CaTrials');
+save(['contact_CaTrials' contact_CaSig_tag],'contact_CaTrials');
+save('sorted_CaTrials', 'sorted_CaTrials');
 
 
 
@@ -3694,14 +3719,16 @@ plot(solo_data.falseAlarmTrialNums,ones(1,length(solo_data.falseAlarmTrialNums))
 plot(solo_data.correctRejectionTrialNums,ones(1,length(solo_data.correctRejectionTrialNums)),'gd','MarkerSize',10,'MarkerFaceColor','g'); 
 
 if addcontactinfo
-    wSigfilenames =char(cellfun(@(x) x.trackerFileName(29:32),wSigTrials,'uniformoutput',false));
-    
-    contacttimes=cellfun(@(x) x.contacts{1}, wSigTrials,'uniformoutput',false);
-    nocontact = cellfun(@isempty,contacttimes);
+    wSigfilenames =cellfun(@(x) x.trackerFileName(29:32),wSigTrials,'uniformoutput',false);
+    whisker_trials = str2num(char(wSigfilenames));
+% %      whisker_trialinds = whisker_trials(find(ismember(whisker_trials,solo_data.trialNums)));
+% %     contacttimes=cellfun(@(x) x.contacts{1}, wSigTrials(whisker_trialinds),'uniformoutput',false);
+contacttimes=cellfun(@(x) x.contacts{1}, wSigTrials,'uniformoutput',false)   ;
+nocontact = cellfun(@isempty,contacttimes);
 %     inds = find(contact==1);
 %     wSigTrialinds=str2num(wSigfilenames); 
 %     plot(wSigTrialinds(inds),contact(inds)*0,'kd','MarkerSize',10);
-    plot(nocontact,'kd','MarkerSize',10);
+    plot(whisker_trials,nocontact,'kd','MarkerSize',10);
 
 
 end
@@ -3834,7 +3861,7 @@ numblocks = length(blocklist);
 
 numsessions=size(wSigSummary,2);
 commentstr = get(handles.plot_wSigSum_title,'String');
-col = [.25 .25 .25; 1 .6 0];
+col = [.75 .75 .75; 1 .6 0];
 lwidth = linspace(0 ,1,numsessions);
 transparency =  0.5;
 legendstr = cell(numsessions,1);
@@ -3900,8 +3927,8 @@ for j= 1:numblocks
 %       jbfill([count+1:count+length(data)],upper,lower,col(j,:),col(j,:),1,transparency); hold on;
 %       plot([count+1:count+length(data)],data,'color',col(j,:),'linewidth',1.5);
     
-        plot(xdata+count,ydata,'color',col(j,:),'linewidth',1.5); hold on;
-        plot(binnedxdata+count,binnedydata,'color','r','Marker','o','MarkerSize',10);
+        plot(xdata+count,ydata,'color',col(j,:),'linewidth',1.0); hold on;
+        plot(binnedxdata+count,binnedydata,'color','k','Marker','o','MarkerSize',6,'MarkerFaceColor','k');
        legendstr(i) = {['session' num2str(i) ' ']};
 % % %        wSigSum_Sessions.setpoint{i,j}=[data;lower;upper;xval']';
         wSigSum_Sessions.setpoint{i,j}=[xdata;ydata]';
@@ -3909,14 +3936,14 @@ for j= 1:numblocks
        axes(ah2);
 % % %        jbfill([count+1:count+length(data)],upper-bartheta,lower-bartheta,col(j,:),col(j,:),1,transparency); hold on;
 % % %        plot([count+1:count+length(data)],data-bartheta,'color',col(j,:),'linewidth',1.5);     
-       plot(xdata+count,ydata-bartheta,'color',col(j,:),'linewidth',1.5);  
-       plot(binnedxdata+count,binnedydata-bartheta,'color','r','Marker','o','MarkerSize',10);
+       plot(xdata+count,ydata-bartheta,'color',col(j,:),'linewidth',1.0);  
+       plot(binnedxdata+count,binnedydata-bartheta,'color','k','Marker','o','MarkerSize',6,'MarkerFaceColor','k');
        legendstr(i) = {['session' num2str(i) ' ']};
 
           count = count+xdata(end)+10;
 
     end
-    axes(ah1);
+    axes(ah1); axis([
    saveas(gcf,['allsessions_theta_bl ' blocklist{j}] ,'tif');  
    saveas(gcf,['allsessions_theta_bl' blocklist{j}],'fig');
    
@@ -3960,8 +3987,8 @@ for j= 1:numblocks
 % % %          plottemp(2:24)=nan;
  
 % % %       plot([count+1:count+length(plottemp)],plottemp,'color',col(j,:),'linewidth',1.5);
-       plot(xdata+count,ydata,'color',col(j,:),'linewidth',1.5);hold on;
-       plot(binnedxdata+count,binnedydata,'color','r','Marker','o','MarkerSize',10);
+       plot(xdata+count,ydata,'color',col(j,:),'linewidth',1.0);hold on;
+       plot(binnedxdata+count,binnedydata,'color','k','Marker','o','MarkerSize',6,'MarkerFaceColor','k');
         legendstr(i) = {['session' num2str(i) ' ']};
        wSigSum_Sessions.amp{i,j}=[xdata;ydata]';
        wSigSum_Sessions.ampbinned{i,j}= [binnedxdata;binnedydata]';
@@ -3997,8 +4024,8 @@ for j= 1:numblocks
        binnedydata = temp{block}(:,2)';
        binnedxdata = temp{block}(:,1)';      
  
-       plot(xdata+count,ydata,'color',col(j,:),'linewidth',1.5);hold on;
-       plot(binnedxdata+count,binnedydata,'color','r','Marker','o','MarkerSize',6);
+       plot(xdata+count,ydata,'color',col(j,:),'linewidth',1);hold on;
+       plot(binnedxdata+count,binnedydata,'color','k','Marker','o','MarkerSize',6,'MarkerFaceColor','k');
         legendstr(i) = {['session' num2str(i) ' ']};
        wSigSum_Sessions.setpoint_prewhisk{i,j}=[xdata;ydata]';
        wSigSum_Sessions.setpoint_prewhiskbinned{i,j}= [binnedxdata;binnedydata]';
@@ -4566,5 +4593,5 @@ end
 function align_to_last_touch_Callback(hObject, eventdata, handles)
 handles.aligned_contact = get(handles.align_to_last_touch,'Value'); 
 if handles.aligned_contact
-    set(handles.align_to_fisrt_touch,'Value',0);
+    set(handles.align_to_first_touch,'Value',0);
 end

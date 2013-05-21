@@ -4,6 +4,7 @@ roisperfig = 5;
 fovname = ['fov ' fov 'rois ' roislist]; 
 frametime=obj.FrameTime;
 rois_trials  = arrayfun(@(x) x.dff, obj,'uniformoutput',false);
+dKappa = cell2mat(arrayfun(@(x) x.deltaKappa{1}, obj,'uniformoutput',false)');
 numtrials = length(rois_trials);
 numrois = size(rois_trials{1},1);
 numframes =size(rois_trials{1},2);
@@ -33,7 +34,7 @@ if(tag_trialtypes ==1)
 else 
     newrois =permute(temprois,[3,2,1]);
 end
-numcolstoplot = 1+length(unique(trialtypes))*2;
+numcolstoplot = 1+length(unique(trialtypes))*2+1;
 dt = ts(length(ts))-ts(length(ts)-1);
 roicount = 1;
 count =1;
@@ -63,7 +64,7 @@ rois_name_tag = '';
                         plot(ts ,newrois(trials_ktype(j),1:length(ts),rois(i))','color',col(types(k),:),'linewidth',1);           
                      hold on;  
                     end   
-                    axis([0 ts(length(ts)) -200 800]);set(gca,'YMinorTick','on','YTick', -200:200:800);
+                    axis([0 ts(length(ts)) -200 600]);set(gca,'YMinorTick','on','YTick', -200:200:600);
                     vline([ .5 1 1.5 2 2.5],'k-');
                 end
 
@@ -90,20 +91,50 @@ rois_name_tag = '';
                     subplot(roisperfig,numcolstoplot, count);
                     count = count+1;
                     temp_data=newrois(trials_ktype,1:length(ts),rois(i));
-                    temp_avg=mean(temp_data,1);                  
-                    temp_sd=(temp_data.^2 + repmat(temp_avg.^2,size(temp_data,1),1) - 2*temp_data.*repmat(temp_avg,size(temp_data,1),1));
-                    temp_sd=(mean(temp_sd,1)).^0.5;
+                    [all_data,detected] = detect_Ca_events(temp_data,frametime,80);
+                    detected_data= all_data(find(detected),:);
+                    detected_avg=sum(detected_data ,1)./max(sum(detected,1),1);                  
+                    detected_sd=(detected_data.^2 + repmat(detected_avg.^2,size(detected_data,1),1) - 2*detected_data.*repmat(detected_avg,size(detected_data,1),1));
+                    detected_sd=(mean(detected_sd,1)).^0.5;
 
 
     %               jbfill(ts,temp_avg+temp_sd,temp_avg-temp_sd,col(types(k),:),col(types(k),:),1,transparency); hold on;
+                    plot([frametime:frametime:length(detected_avg)*frametime] ,detected_avg,'color',col(types(k),:),'linewidth',1.5);           
 
-                    plot(ts ,temp_avg,'color',col(types(k),:),'linewidth',1.5);           
+                   axis([0 ts(length(ts)) -200 600]);set(gca,'YMinorTick','on','YTick', -200:200:600);
 
-                   axis([0 ts(length(ts)) -200 300]);set(gca,'YMinorTick','on','YTick', -200:200:300);
                     vline([.5 1 1.5 2 2.5],'k-');
 
                 end
+                
+                
+            % plot max(dFF) vs. dKappa
+                
+                types= unique(trialtypes);  
+                    subplot(roisperfig,numcolstoplot, count);
+                    count = count+1;
+                col = [0 0 1; 0 .5 1; 0 1 0;1 .6 0;1 0 0; .5 0 0  ];
+                for k = 1:length(types)
+                    trials_ktype=(find(trialtypes==types(k)));  
+                    temp_data=newrois(trials_ktype,1:length(ts),rois(i));
+                    temp_dKappa = dKappa(trials_ktype,:);
+                    [all_data,detected] = detect_Ca_events(temp_data,frametime,80);
+                    detected_data= all_data(find(detected),:);
+                    detected_dKappa = temp_dKappa(find(detected),:);
+                    max_dFF=zeros(size(detected_data,1),1);
+                    total_dKappa = zeros(size(detected_data,1),1);
+                    
+                     max_dFF=max(detected_data,[],2);
+                    total_dKappa =  sum(detected_dKappa,2);
+   
 
+%                      plot(total_dKappa,max_dFF,'Marker','o','color',col(types(k),:),'Markersize',6);
+                      scatter(total_dKappa,max_dFF,20,col(types(k),:),'fill'); hold on;
+%                     vline([.5 1 1.5 2 2.5],'k-');
+
+                end
+%                 axis([0 2000 0 600]);set(gca,'YMinorTick','on','YTick', 0:200:600);
+                set(gca,'Xscale','log');
 
         if (mod(roicount,roisperfig)>0) && (roicount<length(rois))
 
@@ -133,16 +164,42 @@ rois_name_tag = '';
     end
 end
 
-function [event_detected_data] = detect_Ca_events(src_data,sampling_time)
+function [event_detected_data,detected] = detect_Ca_events(src_data,sampling_time,threshold)
+    event_detected_data = zeros(size(src_data,1),floor(3/sampling_time) );
+    detected = zeros(size(src_data,1),1);
     for i = 1:size(src_data,1)
        current_trace = src_data(i,:);
-       event_filter = [zeros(round(0.1/sampling_time),1); ones(round(0.2/sampling_time),1)];
-       filtersize = size(event_filter,1);
-       dot_product = zeros(size(current_trace,1);
-       for tau = -filtersize : 1: filtersize
-            
+       
+       if (max(current_trace)> threshold)
+           
+           [ind,hval] = hist(current_trace);
+           F0 = mean(hval(1:4));
+           Fmax = max(hval);
+           F1 = F0 * ones(round(.5/sampling_time),1);
+           F2 = [F0 * ones(round(length(F1)/2)-1,1);Fmax * ones(round(length(F1)/2),1)];
+            for j = 1: length(current_trace)
+               tp_trace = current_trace(j:j + length(F1)-1);
+               lse1 = sum((tp_trace-F1').^2);
+               lse2 = sum((tp_trace-F2').^2);
+               if(lse2<lse1)
+                   detected(i) =1;
+                   event_index = j+round(length(F1)/2); 
+                   temp = current_trace(max(1,event_index - floor(.5/sampling_time)): min(length(current_trace),event_index + round(2.5/sampling_time)));
+                   leading_blank = event_index - floor(.5/sampling_time);
+                   offset = (leading_blank <0);
+                   event_detected_data (i, (offset*leading_blank*-1)+1 :length(temp)+(offset*leading_blank*-1)) = temp;
+                   
+                   break
+               end
+               
+               if(j+1>length(current_trace)-length(F1)+1)
+                   break
+               end
+     
+            end
+
        end
-       dot_product = current_
+
     end
     
 end
