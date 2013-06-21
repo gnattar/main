@@ -42,48 +42,50 @@ for i = 1:nTrials
     ws = wsArray.ws_trials{i};
     contact_inds{i} = cell(1, length(wsArray.trajIDs));
     contact_direct{i} = cell(1, length(wsArray.trajIDs));
-    if ws.useFlag == 0
-        continue
-    end
+%     if ws.useFlag == 0
+%         continue
+%     end
     %%
     barPos = ws.bar_pos_trial; 
 %     barRadiusInPx = ws.barRadius;
-    barRadiusInPx = 12;
+    barRadiusInPx = 13;
+     poletime = ws.bar_time_win;
+    if isempty(poletime)
+        poletime = [1,2.5];
+    end
+    
+    if i == 61
+        'pausing here for T 75'
+    end
+    
     for k = 1: length(wsArray.trajIDs)
         ts = ws.time{k};
         d2bar = ws.distToBar{k}./wsArray.pxPerMm;
+% % %         kappa       = ws.kappa{k};
+% % %         k0 = kappa(ws.time{k}> poletime(1) & ws.time{k} < poletime(2));
+% % %         baseKappa = nanmean ( kappa ( ( abs(k0) < prctile(abs(k0),10 ) ) ) );
+% % %         deltaKappa = (kappa - baseKappa)*1000; % in 1/meter
+        
         deltaKappa = ws.deltaKappa{k};
         tip_coords = ws.get_tip_coords(wsArray.trajIDs(k));
     
         barFrInds = find(ts > btw(1) & ts < btw(2));
         
-%         switch k
-%             case 1 % C3 or C4
-%                 KaThresh = kappaThresh_prior{1};
-% %                 KaTreshFactor = kappa_threshFactor(1);
-%             case 2 % C2
-%                 KaThresh = kappaThresh_prior{1};
-% %                 KaTreshFactor = kappa_threshFactor(2);
-%             case 3
-%                 KaThresh = kappaThresh_prior{2};
-% %                 KaTreshFactor = kappa_threshFactor(3);
-%             case 4
-%                 KaThresh = kappaThresh_prior{3};
-% %                 KaTreshFactor = kappa_threshFactor(3);
-%         end
-%         barFrInds = wSession.barFrameRange{k}(1) : wSession.barFrameRange{k}(2);
         threshDist = param.threshDistToBarCenter; % {k}(i,:);
-%         threshKappa = param.thresh_deltaKappa{k};
+
         threshDist = param.threshDistToBarCenter;
-        KaThresh = param.thresh_deltaKappa;
+        threshKappa = param.thresh_deltaKappa;
+        threshDist0 = 2.5;
 %         fprintf('Trial %d, wNo %d\t', i, k);
         if(isempty(barFrInds))
             contact_inds{i}{k}=[];
-            contact_direct{i}{k} =[];
+            contact_direct{i}{k} =[]; 
             ['Check tracker files for trial '  wsArray.ws_trials{1,i}.trackerFileName ' for whisker ' num2str(k)]
             continue
         else   
-            [contact_inds{i}{k}, contact_direct{i}{k}] = whisker_contact_detector_auto_thresh( d2bar, deltaKappa, barFrInds, KaThresh, [], threshDist);
+%             [contact_inds{i}{k}, contact_direct{i}{k}] = whisker_contact_detector_auto_thresh( d2bar, deltaKappa, barFrInds,KaThresh, [], threshDist);
+             [contact_inds{i}{k}, contact_direct{i}{k}] = whisker_contact_detector_auto_thresh( d2bar, deltaKappa, barFrInds, threshKappa,threshDist0,threshDist,ts);
+
 %         contact_inds{i}{k} = whisker_contact_detector4 ( d2bar, deltaKappa, ...
 %             barFrInds, threshDist, threshKappa,barPos,tip_coords,barRadiusInPx,ts);
         end

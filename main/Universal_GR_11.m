@@ -22,7 +22,7 @@ function varargout = Universal_GR_11(varargin)
 
 % Edit the above text to modify the response to help Universal_GR_11
  
-% Last Modified by GUIDE v2.5 21-May-2013 09:22:20
+% Last Modified by GUIDE v2.5 21-May-2013 11:37:41
 
 % Begin initialization code - DO NOT EDIT
 
@@ -514,17 +514,19 @@ if length(CaSignal.ROIinfo) >= TrialNo
 end
 for i = 1:length(roi_pos) % num ROIs
     if i == CurrentROINo
-        lw = 2;
+        lw = 1.2;
+        col = [.6 .5 .1];
     else
-        lw = 1;
+        lw = .5;
+        col = [0.8 0 0];
     end
     if ~isempty(roi_pos{i})
         %             if length(CaSignal.ROIplot)>=i & ~isempty(CaSignal.ROIplot(i))...
         %                     & ishandle(CaSignal.ROIplot(i))
         %                 delete(CaSignal.ROIplot(i));
         %             end
-        h_roi_plots(i) = line(roi_pos{i}(:,1),roi_pos{i}(:,2), 'Color', [0.8 0 0], 'LineWidth', lw);
-        text(median(roi_pos{i}(:,1)), median(roi_pos{i}(:,2)), num2str(i),'Color',[0 .7 0],'FontSize',18);
+        h_roi_plots(i) = line(roi_pos{i}(:,1),roi_pos{i}(:,2), 'Color', col, 'LineWidth', lw);
+        text(median(roi_pos{i}(:,1)+5), median(roi_pos{i}(:,2)+5), num2str(i),'Color',[0 .7 0],'FontSize',12);
         set(h_roi_plots(i), 'LineWidth', lw);
     end
 end
@@ -1145,6 +1147,8 @@ function SaveResultsButton_Callback(hObject, eventdata, handles)
 global CaSignal % ROIinfo ICA_ROIs
 TrialNo = str2double(get(handles.CurrentTrialNo,'String'));
 FileName_prefix = CaSignal.CaTrials(TrialNo).FileName_prefix;
+datapath = get(handles.DataPathEdit,'String');
+cd (datapath);
 % CaSignal.CaTrials = CaSignal.CaTrials;
 % ROIinfo = ROIinfo;
 ICA_results.ROIinfo = [];
@@ -1162,13 +1166,29 @@ for i = 1:length(CaSignal.CaTrials)
     end
 end
 CaTrials = CaSignal.CaTrials;
-save(CaSignal.results_fn, 'CaTrials','ICA_results');
-save(CaSignal.results_roiinfo, 'ROIinfo');
-% save(fullfile(CaSignal.results_path, ['ICA_ROIs_', FileName_prefix '.mat']), 'ICA_ROIs');
+save(CaSignal.results_fn, 'CaTrials','ICA_results','-v7.3');
+save(CaSignal.results_roiinfo, 'ROIinfo','-v7.3');
+save(fullfile(CaSignal.results_path, ['ICA_ROIs_', FileName_prefix '.mat']), 'ICA_ROIs');
 msg_str = sprintf('CaTrials Saved, with %d trials, %d ROIs', length(CaSignal.CaTrials), CaSignal.CaTrials(TrialNo).nROIs);
 disp(msg_str);
 set(handles.msgBox, 'String', msg_str);
+current_dir = pwd;
+separators = find(current_dir == filesep);
+session_dir = current_dir(1:separators(length(separators)-3));
+cd (session_dir);
+sessObj_found = dir('sessObj.mat');
+if isempty(sessObj_found)
+    sessObj = {};
+    sessObj.CaTrials = CaSignal.CaTrials;
+    save('sessObj','sessObj','-v7.3');
+else
+    load('sessObj.mat');
+    sessObj.CaTrials = CaSignal.CaTrials;
+    save('sessObj','sessObj','-v7.3');
+end
+cd (current_dir);
 save_gui_info(handles);
+
 
 function batchStartTrial_Callback(hObject, eventdata, handles)
 
@@ -2343,6 +2363,29 @@ end
 trialStartEnd = [handles.SoloStartTrial,handles.SoloEndTrial];
 obj = Solo.BehavTrialArray_gr(mouseName, sessionName,trialStartEnd,Solopath);
 save(['solodata_' mouseName '_' sessionID],'obj');
+%% adding solo data to sessObj
+behavTrialNums=[handles.SoloStartTrial:handles.SoloEndTrial];
+[Solo_data, SoloFileName] = Solo.load_data_gr(mouseName, sessionName,trialStartEnd,Solopath);
+behavTrials = {};
+for i = 1:length(behavTrialNums)
+    behavTrials{i} = Solo.BehavTrial_gr(Solo_data,behavTrialNums(i),1);
+end
+
+current_dir = pwd;
+separators = find(current_dir == filesep);
+session_dir = current_dir(1:separators(length(separators)));
+cd (session_dir);
+sessObj_found = dir('sessObj.mat');
+if isempty(sessObj_found)
+    sessObj = {};
+    sessObj.behavTrials = behavTrials;
+    save('sessObj','sessObj','-v7.3');
+else
+    load('sessObj.mat');
+    sessObj.behavTrials = behavTrials;
+    save('sessObj','sessObj','-v7.3');
+end
+cd (current_dir);
 
 
 function baseDataPath_Callback(hObject, eventdata, handles)
@@ -3294,46 +3337,46 @@ if(get(handles.sortwtouchInfo,'Value')==1)
     sorted_CaTrials.touch =CaSig_tags(touchtrials)';
     sorted_CaTrials.touch_barpos=cell2mat(cellfun(@(x) x.bar_pos_trial(1,1), wSigTrials(wSig_tags(touchtrials)),'uniformoutput',false));
 
-    for i=1:length(trialinds)
-    
-            TrialName = strrep(CaTrials(CaSig_tags(i)).FileName,CaTrials(CaSig_tags(i)).FileName_prefix,'');
-            TrialName=strrep(TrialName,'.tif','');
-            sessObj(i).dff = CaTrials(CaSig_tags(i)).dff;
-            sessObj(i).ts = {[1:size(CaTrials(CaSig_tags(i)).dff,2)]*CaTrials(CaSig_tags(i)).FrameTime};
-            sessObj(i).theta = wSigTrials{wSig_tags(i)}.theta;
-            sessObj(i).kappa = wSigTrials{wSig_tags(i)}.kappa;
-            sessObj(i).velocity = wSigTrials{wSig_tags(i)}.Velocity;
-            sessObj(i).deltaKappa = wSigTrials{wSig_tags(i)}.deltaKappa;
-            sessObj(i).ts_wsk = wSigTrials{wSig_tags(i)}.time;
-            sessObj(i).contactdir = wSigTrials{wSig_tags(i)}.contact_direct;
-            sessObj(i).FrameTime = CaTrials(CaSig_tags(i)).FrameTime;
-            sessObj(i).nframes = CaTrials(CaSig_tags(i)).nFrames;
-            sessObj(i).CaSigTrialind=CaTrials(CaSig_tags(i)).TrialNo;
-            sessObj(i).TrialName= TrialName;
-            sessObj(i).nROIs = CaTrials(CaSig_tags(i)).nROIs;
-            sessObj(i).contacts=wSigTrials{wSig_tags(i)}.contacts;
-            sessObj(i).barpos = cellfun(@(x) x.bar_pos_trial(1,1), wSigTrials(wSig_tags(touchtrials)),'uniformoutput',false);
-            switch(ind(i))
-                case(1)
-                    sessObj(i).trialtype = 'Hit';               
-                case(2)
-                    sessObj(i).trialtype = 'Miss';
-                case(3)
-                    sessObj(i).trialtype = 'CR';                   
-                case(4)
-                    sessObj(i).trialtype = 'FA';
-  
-            end
-            if( isfield(CaTrials, 'ephusTrial')) 
-                sessObj(i).licks = CaTrials(CaSig_tags(i)).ephusTrial.licks;
-                sessObj(i).poleposition = CaTrials(i).ephusTrial.poleposition;
-                sessObj(i).ephuststep = CaTrials(i).ephusTrial.ephuststep;
-            end
-    end
+% % %     for i=1:length(trialinds)
+% % %     
+% % %             TrialName = strrep(CaTrials(CaSig_tags(i)).FileName,CaTrials(CaSig_tags(i)).FileName_prefix,'');
+% % %             TrialName=strrep(TrialName,'.tif','');
+% % %             sessObj(i).dff = CaTrials(CaSig_tags(i)).dff;
+% % %             sessObj(i).ts = {[1:size(CaTrials(CaSig_tags(i)).dff,2)]*CaTrials(CaSig_tags(i)).FrameTime};
+% % %             sessObj(i).theta = wSigTrials{wSig_tags(i)}.theta;
+% % %             sessObj(i).kappa = wSigTrials{wSig_tags(i)}.kappa;
+% %             sessObj(i).velocity = wSigTrials{wSig_tags(i)}.Velocity;
+% %             sessObj(i).deltaKappa = wSigTrials{wSig_tags(i)}.deltaKappa;
+% %             sessObj(i).ts_wsk = wSigTrials{wSig_tags(i)}.time;
+% %             sessObj(i).contactdir = wSigTrials{wSig_tags(i)}.contact_direct;
+% %             sessObj(i).FrameTime = CaTrials(CaSig_tags(i)).FrameTime;
+% %             sessObj(i).nframes = CaTrials(CaSig_tags(i)).nFrames;
+% %             sessObj(i).CaSigTrialind=CaTrials(CaSig_tags(i)).TrialNo;
+% %             sessObj(i).TrialName= TrialName;
+% %             sessObj(i).nROIs = CaTrials(CaSig_tags(i)).nROIs;
+% %             sessObj(i).contacts=wSigTrials{wSig_tags(i)}.contacts;
+% %             sessObj(i).barpos = cellfun(@(x) x.bar_pos_trial(1,1), wSigTrials(wSig_tags(touchtrials)),'uniformoutput',false);
+% %             switch(ind(i))
+% %                 case(1)
+% %                     sessObj(i).trialtype = 'Hit';               
+%                 case(2)
+%                     sessObj(i).trialtype = 'Miss';
+%                 case(3)
+%                     sessObj(i).trialtype = 'CR';                   
+%                 case(4)
+%                     sessObj(i).trialtype = 'FA';
+%   
+%             end
+%             if( isfield(CaTrials, 'ephusTrial')) 
+%                 sessObj(i).licks = CaTrials(CaSig_tags(i)).ephusTrial.licks;
+%                 sessObj(i).poleposition = CaTrials(i).ephusTrial.poleposition;
+%                 sessObj(i).ephuststep = CaTrials(i).ephusTrial.ephuststep;
+%             end
+%     end
     dirname = pwd;
     sessdir = strrep(dirname,'/fov_01001/fluo_batch_out/',''); %% save under roi folder 
 % %     roiname = strrep(sessname,'/fov_01001/fluo_batch_out/',''); 
-    save('sessObj','sessObj');
+%     save('sessObj','sessObj');
 end
      save('sorted_CaTrials','sorted_CaTrials');
 end
@@ -3355,10 +3398,14 @@ function compute_contact_CaSignal_Callback(hObject, eventdata, handles)
 global wSigTrials
 global CaTrials
 global sorted_CaTrials
-global contact_CaTrials
+global contact_CaTrials 
 global sessionObj
 framerate = 500; % Hz
 whiskerID =1;
+ S = {'Protract';'Retract'};
+[Selection,ok] = listdlg('PromptString','Select direction of touch','ListString',S,'SelectionMode','single','ListSize',[160,100])
+
+selected_contact_direct = S{Selection};
 if(isempty(wSigTrials))
     [filename,pathname]=uigetfile('wSigTrials*.mat','Load wSigTrials.mat file');
     load([pathname filesep filename]);
@@ -3408,22 +3455,7 @@ for i = 1: length(trialnums)
 %            extraneouscontacts = contacttimes
 end
 
-% % % % %% removing all trials with low theta: these are clear errors in contact detection , fix better later
-% % % %     nogotrials = [find(Y==3); find(Y==4)];
-% % % %     thetavals=cellfun(@(x) x.theta{whiskerID}, wSigTrials(wSig_tags(nogotrials)),'uniformoutput',false);  
-% % % %     contacttimes=cellfun(@(x) x.contacts{whiskerID}, wSigTrials(wSig_tags(nogotrials)),'uniformoutput',false);
-% % % %     velocity=cellfun(@(x) x.Velocity{whiskerID}, wSigTrials(wSig_tags(nogotrials)),'uniformoutput',false);  
-% % % %     deltaKappa=cellfun(@(x) x.deltaKappa{whiskerID}, wSigTrials(wSig_tags(nogotrials)),'uniformoutput',false);  
-% % % %     ts_wsk=cellfun(@(x) x.time{whiskerID}, wSigTrials(wSig_tags(nogotrials)),'uniformoutput',false);  
-% % % %     contactdir=cellfun(@(x) x.contact_direct{whiskerID}, wSigTrials(wSig_tags(nogotrials)),'uniformoutput',false);  
-% % % %     for i=1:length(nogotrials)
-% % % %         if (~isempty(contacttimes{i}))
-% % % %            ind = contacttimes{i}{1}(1);           
-% % % %            if (thetavals{i}(ind)<0)
-% % % %                deletelist(i) = nogotrials(i);
-% % % %            end
-% % % %         end
-% % % %     end
+
 
 %% removing all trials with no contact (try plotting only for this later)
     contacttimes=cellfun(@(x) x.contacts{whiskerID}, wSigTrials(wSig_tags(trialinds)),'uniformoutput',false);
@@ -3434,10 +3466,13 @@ end
     contacttimes=cellfun(@(x) x.contacts{whiskerID}, wSigTrials(wSig_tags(trialinds)),'uniformoutput',false);
     thetavals=cellfun(@(x) x.theta{whiskerID}, wSigTrials(wSig_tags(trialinds)),'uniformoutput',false);  
     kappavals=cellfun(@(x) x.kappa{whiskerID}, wSigTrials(wSig_tags(trialinds)),'uniformoutput',false);  
-    velocity=cellfun(@(x) x.Velocity{whiskerID}, wSigTrials(wSig_tags(trialinds)),'uniformoutput',false);  
+    Velocity=cellfun(@(x) x.Velocity{whiskerID}, wSigTrials(wSig_tags(trialinds)),'uniformoutput',false);
+    Setpoint=cellfun(@(x) x.Setpoint{whiskerID}, wSigTrials(wSig_tags(trialinds)),'uniformoutput',false);  
+    Amplitude=cellfun(@(x) x.Amplitude{whiskerID}, wSigTrials(wSig_tags(trialinds)),'uniformoutput',false); 
     deltaKappa=cellfun(@(x) x.deltaKappa{whiskerID}, wSigTrials(wSig_tags(trialinds)),'uniformoutput',false);  
     ts_wsk=cellfun(@(x) x.time{whiskerID}, wSigTrials(wSig_tags(trialinds)),'uniformoutput',false);  
     contactdir=cellfun(@(x) x.contact_direct{whiskerID}, wSigTrials(wSig_tags(trialinds)),'uniformoutput',false); 
+    contacts=cellfun(@(x) x.contacts{whiskerID}, wSigTrials(wSig_tags(trialinds)),'uniformoutput',false); 
     trialnums(nocontacts) = [];
     wSig_tags(nocontacts)=[];
     CaSig_tags(nocontacts)=[];
@@ -3467,9 +3502,9 @@ end
     numframes = ceil((dur+baseline)/Caframetime);% 2.5seconds worth of data
     
     numcontacts =0;
-    contact_CaTrials=struct('dff',{},'FrameTime',{},'nframes',{},'trialtype',{},...
-                                       'licks', {},'poleposition',{},'nROIs',{},'theta',{},'kappa',{},'velocity',{},...
-                                   'deltaKappa',{},'ts_wsk',{},'contactdir',{},'barpos',{});
+    contact_CaTrials=struct('solo_trial',[],'dff',{},'ts',{},'FrameTime',{},'nframes',{},'trialtype',[],'trialCorrect',[],'FileName_prefix',{},'FileName',{},...
+                                     'TrialName',{},   'licks', {},'poleposition',{},'nROIs',{},'theta',{},'kappa',{},...
+                                   'deltaKappa',{},'ts_wsk',{},'contactdir',{},'contacts',{},'barpos',[],'Setpoint',{},'Amplitude',{},'Velocity',{});
     count=0;
     handles.aligned_contact = get(handles.align_to_first_touch,'Value'); % 1 for first 
     
@@ -3501,7 +3536,9 @@ end
          extractedCaSig = zeros(numrois,numframes);
          extractedTheta=zeros(1,numpts);
          extractedKappa=zeros(1,numpts);
-         extractedvelocity=zeros(1,numpts);
+         extractedVelocity=zeros(1,numpts);
+         extractedSetpoint=zeros(1,numpts);
+         extractedAmplitude=zeros(1,numpts);
          extracteddeltaKappa=zeros(1,numpts);
          extractedts_wsk=zeros(1,numpts);
          contact_sorted_CaSig = zeros(numrois,numframes,numcontacts);
@@ -3526,14 +3563,19 @@ end
             temp=kappavals{i};
             extractedKappa(diff(1,1)+1:numpts-diff(1,2))= temp(strp+1:endp);
 
-            temp=velocity{i};
-            extractedvelocity(diff(1,1)+1:numpts-diff(1,2))= temp(strp+1:endp);
+            temp=Velocity{i};
+            extractedVelocity(diff(1,1)+1:numpts-diff(1,2))= temp(strp+1:endp);
+            temp=Setpoint{i};
+            extractedSetpoint(diff(1,1)+1:numpts-diff(1,2))= temp(strp+1:endp);
+            temp=Amplitude{i};
+            extractedAmplitude(diff(1,1)+1:numpts-diff(1,2))= temp(strp+1:endp);
             temp=deltaKappa{i};
             extracteddeltaKappa(diff(1,1)+1:numpts-diff(1,2))= temp(strp+1:endp);
             temp=ts_wsk{i};
             extractedts_wsk(diff(1,1)+1:numpts-diff(1,2))= temp(strp+1:endp);
-            extractedcontactdir=contactdir{i};   
-            if( isfield(CaTrials, 'ephusTrial')) 
+            extractedcontactdir=contactdir{i}; 
+            extractedcontacts=contacts{i};
+            if( isfield(CaTrials, 'ephusTrial') && ~isempty(CaTrials(i).ephusTrial.ephuststep))
                 ephussamplerate = 1/CaTrials(i).ephusTrial.ephuststep(1);
                 ephusattimepoint = ceil(timepoint*ephussamplerate);
                 if( ephusattimepoint< ceil(.5*ephussamplerate))
@@ -3544,7 +3586,7 @@ end
                 else
                     ephussamples =(ephusattimepoint-ceil(baseline*ephussamplerate)):( ephusattimepoint+ceil(dur*ephussamplerate));
                 end
-                end
+            end
 
             if(timepoint<=.5)
                 strframe=1;
@@ -3568,14 +3610,18 @@ end
 % % %                                        'Trialind', CaTrials(CaSig_tags(i)).TrialNo,'TrialNo',trialnums(i),'nROIs',numrois};
             TrialName = strrep(CaTrials(CaSig_tags(i)).FileName,CaTrials(CaSig_tags(i)).FileName_prefix,'');
             TrialName=strrep(TrialName,'.tif','');
+            contact_CaTrials(count).solo_trial = str2num(TrialName);
             contact_CaTrials(count).dff = extractedCaSig;
-            contact_CaTrials(count).ts ={strframe*Caframetime:Caframetime:endframe*Caframetime};
+            contact_CaTrials(count).ts = [strframe:endframe].*Caframetime;
             contact_CaTrials(count).theta = {extractedTheta};
             contact_CaTrials(count).kappa = {extractedKappa};
-            contact_CaTrials(count).velocity = {extractedvelocity};
+            contact_CaTrials(count).Velocity = {extractedVelocity};
+            contact_CaTrials(count).Setpoint = {extractedSetpoint};
+            contact_CaTrials(count).Amplitude = {extractedAmplitude};
             contact_CaTrials(count).deltaKappa = {extracteddeltaKappa};
             contact_CaTrials(count).ts_wsk={extractedts_wsk};
             contact_CaTrials(count).contactdir = {extractedcontactdir};
+             contact_CaTrials(count).contacts = {extractedcontacts};
             contact_CaTrials(count).FrameTime = CaTrials(CaSig_tags(i)).FrameTime;
             contact_CaTrials(count).nFrames = numframes;
             contact_CaTrials(count).CaSigTrialind=CaTrials(CaSig_tags(i)).TrialNo;
@@ -3598,11 +3644,19 @@ end
             end
 
               if( isfield(CaTrials, 'ephusTrial')) 
+                  if ~isempty(CaTrials(CaSig_tags(i)).ephusTrial.licks)
                      
-                contact_CaTrials(count).licks = CaTrials(CaSig_tags(i)).ephusTrial.licks(ephussamples);
-                contact_CaTrials(count).poleposition = CaTrials(i).ephusTrial.poleposition(ephussamples);
-                contact_CaTrials(count).ephuststep = CaTrials(i).ephusTrial.ephuststep(ephussamples);            
-               end          
+                    contact_CaTrials(count).licks = CaTrials(CaSig_tags(i)).ephusTrial.licks(ephussamples);
+                    contact_CaTrials(count).poleposition = CaTrials(CaSig_tags(i)).ephusTrial.poleposition(ephussamples);
+                    contact_CaTrials(count).ephuststep = CaTrials(CaSig_tags(i)).ephusTrial.ephuststep(ephussamples);  
+                    
+                  else
+                    contact_CaTrials(count).licks = zeros(    (baseline +dur)*10000,1);
+                    contact_CaTrials(count).poleposition = zeros((baseline +dur)*10000,1);
+                    contact_CaTrials(count).ephuststep = zeros((baseline +dur)*10000,1);
+                  end          
+                  
+              end
         end
 
     end
@@ -3634,10 +3688,10 @@ function contactdetect_Callback(hObject, eventdata, handles)
     load([path filesep filename1]);
     [filename2,path]= uigetfile('wSigTrials*.mat', 'Load wSigTrials.mat file');
     load([path filesep filename2]);
-    contDet_param.threshDistToBarCenter = [0   1.2];
-    contDet_param.thresh_deltaKappa = [-0.3	0.3];
+    contDet_param.threshDistToBarCenter = [.1   .55];
+    contDet_param.thresh_deltaKappa = [-.1	.1];
 %      contDet_param.bar_time_window = cellfun(@(x) x.bar_time_win, wsArray.ws_trials,'UniformOutput', false);
-    barTimeWindow = [1.0827 2.5828];
+    barTimeWindow = [1.0 2.5];
     contDet_param.bar_time_window = barTimeWindow;
 % % % %     contact_inds = cell(wsArray.nTrials,1);
 % % % %     contact_direct = cell(wsArray.nTrials,1);
@@ -3652,6 +3706,19 @@ function contactdetect_Callback(hObject, eventdata, handles)
     save(filename1, 'wsArray');
 
     save (filename2,'wSigTrials');
+    
+    
+        %% adding this to sessObj
+    sessObj_found = dir('sessObj.mat');
+    if isempty(sessObj_found)
+        sessObj = {};
+        sessObj.wSigTrials = wSigTrials;
+        save('sessObj','sessObj','-v7.3');
+    else
+        load('sessObj.mat');
+        sessObj.wSigTrials = wSigTrials;;
+        save('sessObj','sessObj','-v7.3');
+    end
     
 % end
 
@@ -3851,6 +3918,7 @@ global wSigSummary
 global wSigSum_Sessions
 
 bartheta= str2num(get(handles.current_bartheta,'String'));
+baseline_bartheta = str2num(get(handles.unbiased_bartheta,'String'));
 plotlist = get(handles.wSigSum_toplot,'String');
 datatoplot= plotlist{get(handles.wSigSum_toplot,'Value')};
 
@@ -3869,6 +3937,7 @@ legendstr = cell(numsessions,1);
 datacollected = zeros(numsessions*70,4,numblocks);
 
 spacing = 1/(numsessions+3.5);
+baseline_sessions =2;
 % plotting setpoint
 for j= 1:numblocks
     block =j;
@@ -3926,9 +3995,15 @@ for j= 1:numblocks
       axes(ah1);  
 %       jbfill([count+1:count+length(data)],upper,lower,col(j,:),col(j,:),1,transparency); hold on;
 %       plot([count+1:count+length(data)],data,'color',col(j,:),'linewidth',1.5);
-    
+      
         plot(xdata+count,ydata,'color',col(j,:),'linewidth',1.0); hold on;
-        plot(binnedxdata+count,binnedydata,'color','k','Marker','o','MarkerSize',6,'MarkerFaceColor','k');
+        if(i<baseline_sessions+1)
+            plot(binnedxdata+count,binnedydata,'color','k','Marker','o','MarkerSize',6,'MarkerFaceColor','k');
+            hline(baseline_bartheta,'k--');
+        else
+            plot(binnedxdata+count,binnedydata,'color','k','Marker','o','MarkerSize',6,'MarkerFaceColor','r');
+            hline(bartheta,'r--');
+        end
        legendstr(i) = {['session' num2str(i) ' ']};
 % % %        wSigSum_Sessions.setpoint{i,j}=[data;lower;upper;xval']';
         wSigSum_Sessions.setpoint{i,j}=[xdata;ydata]';
@@ -3936,18 +4011,25 @@ for j= 1:numblocks
        axes(ah2);
 % % %        jbfill([count+1:count+length(data)],upper-bartheta,lower-bartheta,col(j,:),col(j,:),1,transparency); hold on;
 % % %        plot([count+1:count+length(data)],data-bartheta,'color',col(j,:),'linewidth',1.5);     
-       plot(xdata+count,ydata-bartheta,'color',col(j,:),'linewidth',1.0);  
-       plot(binnedxdata+count,binnedydata-bartheta,'color','k','Marker','o','MarkerSize',6,'MarkerFaceColor','k');
+    if(i<baseline_sessions+1)
+       plot(xdata+count,(ydata-baseline_bartheta),'color',col(j,:),'linewidth',1.0);  
+       plot(binnedxdata+count,(binnedydata-baseline_bartheta),'color','k','Marker','o','MarkerSize',6,'MarkerFaceColor','k');
+    else
+        
+       plot(xdata+count,(ydata-bartheta),'color',col(j,:),'linewidth',1.0);  
+       plot(binnedxdata+count,(binnedydata-bartheta),'color','k','Marker','o','MarkerSize',6,'MarkerFaceColor','r');
+    end   
        legendstr(i) = {['session' num2str(i) ' ']};
 
           count = count+xdata(end)+10;
 
     end
-    axes(ah1); axis([0 count -30 10]);
+    axes(ah1); axis([0 count -20 20]);grid on;
+   
    saveas(gcf,['allsessions_theta_bl ' blocklist{j}] ,'tif');  
    saveas(gcf,['allsessions_theta_bl' blocklist{j}],'fig');
    
-   axes(ah2);axis([0 count -30 10]);
+   axes(ah2);axis([0 count -20 20]);grid on;
    saveas(gcf,['allsessions_error_bl ' blocklist{j}] ,'tif');  
    saveas(gcf,['allsessions_error_bl' blocklist{j}],'fig');
 end
@@ -3987,8 +4069,14 @@ for j= 1:numblocks
 % % %          plottemp(2:24)=nan;
  
 % % %       plot([count+1:count+length(plottemp)],plottemp,'color',col(j,:),'linewidth',1.5);
+
        plot(xdata+count,ydata,'color',col(j,:),'linewidth',1.0);hold on;
-       plot(binnedxdata+count,binnedydata,'color','k','Marker','o','MarkerSize',6,'MarkerFaceColor','k');
+     if(i<baseline_sessions+1)
+         plot(binnedxdata+count,binnedydata,'color','k','Marker','o','MarkerSize',6,'MarkerFaceColor','k');
+     else
+         plot(binnedxdata+count,binnedydata,'color','k','Marker','o','MarkerSize',6,'MarkerFaceColor','r');
+     end
+       
         legendstr(i) = {['session' num2str(i) ' ']};
        wSigSum_Sessions.amp{i,j}=[xdata;ydata]';
        wSigSum_Sessions.ampbinned{i,j}= [binnedxdata;binnedydata]';
@@ -3996,7 +4084,7 @@ for j= 1:numblocks
           count = count+xdata(end)+10;
 
     end
-    axis([0 count -1 20]);
+    axis([0 count -1 30]);grid on;
    saveas(gcf,['allsessions_amplitude_bl ' blocklist{j}] ,'tif');  
    saveas(gcf,['allsessions_amplitude_bl' blocklist{j}],'fig');
 end
@@ -4025,7 +4113,16 @@ for j= 1:numblocks
        binnedxdata = temp{block}(:,1)';      
  
        plot(xdata+count,ydata,'color',col(j,:),'linewidth',1);hold on;
-       plot(binnedxdata+count,binnedydata,'color','k','Marker','o','MarkerSize',6,'MarkerFaceColor','k');
+      if(i<baseline_sessions+1)
+         plot(binnedxdata+count,binnedydata,'color','k','Marker','o','MarkerSize',6,'MarkerFaceColor','k');
+          hline(baseline_bartheta,'k--');
+      else
+          plot(binnedxdata+count,binnedydata,'color','k','Marker','o','MarkerSize',6,'MarkerFaceColor','r');
+          hline(bartheta,'r--');
+      end
+      
+    
+      
         legendstr(i) = {['session' num2str(i) ' ']};
        wSigSum_Sessions.setpoint_prewhisk{i,j}=[xdata;ydata]';
        wSigSum_Sessions.setpoint_prewhiskbinned{i,j}= [binnedxdata;binnedydata]';
@@ -4033,7 +4130,7 @@ for j= 1:numblocks
           count = count+xdata(end)+10;
 
     end
-    axis([0 count -30 10]);
+    axis([0 count -20 20]);grid on;
    saveas(gcf,['allsessions_prewhisk_setpoint_bl ' blocklist{j}] ,'tif');  
    saveas(gcf,['allsessions_prewhisk_setpoint_bl' blocklist{j}],'fig');
 end
@@ -4128,6 +4225,8 @@ obj = ephusTrialArray_gr(mouseName, sessionID,ephuspath);
 cd ..
 save(['ephusdata_' mouseName '_' sessionID],'obj');
 
+
+
 % --- Executes on button press in addephusTrials.
 function addephusTrials_Callback(hObject, eventdata, handles)
 global CaSignal %  ROIinfo ICA_ROIs
@@ -4166,6 +4265,25 @@ for i = 1:length(commontrials)
 end
 disp([num2str(i) ' Ephus Trials added to CaSignal.CaTrials']);
 set(handles.msgBox, 'String', [num2str(i) ' Ephus Trials added to CaSignal.CaTrials']);
+
+%% adding ephus to sessObj
+cd (pathName);
+current_dir = pwd;
+separators = find(current_dir == filesep);
+session_dir = current_dir(1:separators(length(separators)-0)); % one folder up from ephus_data dir
+cd (session_dir);
+sessObj_found = dir('sessObj.mat');
+if isempty(sessObj_found)
+    sessObj = {};
+    sessObj.ephusTrials = obj;
+    save('sessObj','sessObj','-v7.3');
+else
+    load('sessObj.mat');
+    sessObj.ephusTrials = obj;
+    save('sessObj','sessObj','-v7.3');
+end
+cd (current_dir);
+
 guidata(hObject, handles)
 
 
@@ -4595,4 +4713,27 @@ function align_to_last_touch_Callback(hObject, eventdata, handles)
 handles.aligned_contact = get(handles.align_to_last_touch,'Value'); 
 if handles.aligned_contact
     set(handles.align_to_first_touch,'Value',0);
+end
+
+
+
+function unbiased_bartheta_Callback(hObject, eventdata, handles)
+% hObject    handle to unbiased_bartheta (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of unbiased_bartheta as text
+%        str2double(get(hObject,'String')) returns contents of unbiased_bartheta as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function unbiased_bartheta_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to unbiased_bartheta (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
 end

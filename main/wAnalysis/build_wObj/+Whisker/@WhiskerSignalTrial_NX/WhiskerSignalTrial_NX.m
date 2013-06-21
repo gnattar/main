@@ -282,6 +282,15 @@ classdef WhiskerSignalTrial_NX < Whisker.WhiskerSignalTrial
                     x = polyval(px,q);
                     y = polyval(py,q);
                     
+% % %                     if(k > 585)
+% % %                     
+% % %                         p = (0:0.1:2*pi);
+% % %                         r = 6.5;
+% % %                         barpos = obj.barPos(1,[2,3]);
+% % %                         figure;plot(x,y,'color','b','linewidth',1.5); axis ([0 520 0 400]);hold on; plot(r*sin(p)+barpos(1,1),r*cos(p)+barpos(1,2),'linewidth',6,'color','red');
+% % %                         set(gca,'YDir','reverse');
+% % % 
+% % %                     end
                     
                     
                     deltaL = abs(Lb(k) - Ltip(k));
@@ -650,7 +659,13 @@ classdef WhiskerSignalTrial_NX < Whisker.WhiskerSignalTrial
             % define the baseline
             for i = 1:length(tids)
                 kappa = obj.kappa{w_ind(i)};
-                k0 = kappa - mean(kappa);
+                 k0 = kappa - mean(kappa);
+                
+                poletime = obj.bar_time_win;
+                if isempty(poletime)
+                    poletime = [1,2.5];
+                end
+%                 k0 = kappa(obj.time> poletime(1) & obj.time < poletime(2));
                 %                 vel = obj.get_velocity(tids(i));
                 %                 ind = find ( abs(vel) < prctile(abs(vel),20 ) ) ;
                 %                 baseline kappa is averaged across frames with low velocity,

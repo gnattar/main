@@ -60,7 +60,7 @@ if ~exist(fullfile(results_save_dir, sprintf('wsArray_%s.mat',sessionName)),'fil
         whiskers_files = dir('*.whiskers');
         if length(wst_files) < length(whiskers_files)
             
-            Whisker.makeAllDirectory_WhiskerTrial(pwd,trajectory_IDs,'barRadius',8,'barPosOffset',[0 0],'faceSideInImage','top',...
+            Whisker.makeAllDirectory_WhiskerTrial(pwd,trajectory_IDs,'barRadius',12,'barPosOffset',[0 0],'faceSideInImage','top',...
                 'protractionDirection','leftward','pxPerMm',25.7,'framePeriodInSec',.002,'imagePixelDimsXY',imageDim,...
                 'mouseName',animalName,'sessionName',sessionName);
             
@@ -73,10 +73,12 @@ if ~exist(fullfile(results_save_dir, sprintf('wsArray_%s.mat',sessionName)),'fil
 
         
         parfor i=1:length(wSigTrials) %length(wst_files),
-%             fprintf('-----------Start processing trial %d --------------------------\n',i);
+%              fprintf('-----------Start processing trial %d --------------------------\n',i);
            
             wst = load(wst_files(i).name);
+           
             wSigTrials{i} = Whisker.WhiskerSignalTrial_NX(wst.ws);
+          
             if ~isempty(bar_coords)
                
                 wSigTrials{i}.bar_pos_trial = bar_coords(i,:);
@@ -85,12 +87,15 @@ if ~exist(fullfile(results_save_dir, sprintf('wsArray_%s.mat',sessionName)),'fil
             theta_kappa_roi_array = {trajectory_IDs};
             for k=1:length(trajectory_IDs),
                 tid = trajectory_IDs(k);
+                
                 if ~isempty(bar_coords)
+                    
                     wSigTrials{i} = wSigTrials{i}.get_distToBar(tid);   
 %                     wSigTrials{i} = wSigTrials{i}.mean_theta_kappa_near_bar(tid)
                 end
                 theta_kappa_roi_array{k+1} = theta_kappa_roi;
             end
+                 
 %                 wSigTrials{i} =
 %                  wSigTrials{i} = wSigTrials{i}.recompute_cached_mean_theta_kappa({trajectory_IDs,theta_kappa_roi}); %%GRchange
                 
@@ -139,7 +144,7 @@ else
     end
     %
     parfor i=1:length(wSigTrials) %length(wst_files),
-%         fprintf('-----------Start processing trial %d --------------------------\n',i);
+         fprintf('-----------Start processing trial %d --------------------------\n',i);
         if ~isempty(wsArray.bar_time_window)
             wSigTrials{i}.bar_time_win = wsArray.bar_time_window;
         else
@@ -157,11 +162,13 @@ else
             
 %             wSigTrials{i} = wSigTrials{i}.recompute_cached_mean_theta_kappa({trajectory_IDs, wsArray.theta_kappa_roi}); %GRchange removed {:} from theta_kappa_roi
             wSigTrials{i} = wSigTrials{i}.recompute_cached_mean_theta_kappa(theta_kappa_roi_array); % multiwhisker 
-
+            ('thetakapparoi_done')
             wSigTrials{i} = wSigTrials{i}.recompute_cached_follicle_coords(extrap_distance_in_pix);
+            ('folliclecoords_done')
         
     end
     wsArray.ws_trials = wSigTrials;
+   
 end
 
 for ii = 1:length(wsArray.ws_trials)
@@ -174,12 +181,25 @@ wsArray.mouseName = animalName;
 wsArray.sessionName = sessionName;
 cd(results_save_dir);
 save([results_save_dir filesep  sprintf('wsArray_%s', sessionName)], 'wsArray');
+
+%% adding this to sessObj
+sessObj_found = dir('sessObj.mat');
+if isempty(sessObj_found)
+    sessObj = {};
+    sessObj.wSigTrials = wSigTrials;
+    save('sessObj','sessObj','-v7.3');
+else
+    load('sessObj.mat');
+    sessObj.wSigTrials = wSigTrials;
+    save('sessObj','sessObj','-v7.3');
+end
+
 % wsArray.whiskerPadCoords = sessionInfo.whiskerPadOrigin_nx;
 %% Touch detection. 
 % For air puff trials, no bar coordinates, and no touch detection.
 % if ~isempty(bar_coords)
-    contDet_param.threshDistToBarCenter = [0   .7];
-    contDet_param.thresh_deltaKappa = [-0.3	0.3];
+    contDet_param.threshDistToBarCenter = [.1   .55];
+    contDet_param.thresh_deltaKappa = [-0.1	0.1];
     % contDet_param.bar_time_window = cellfun(@(x) x.bar_time_win, wsArray.ws_trials,'UniformOutput', false);
     barTimeWindow = [1 2.5];
     contDet_param.bar_time_window = barTimeWindow;
@@ -194,6 +214,20 @@ save([results_save_dir filesep  sprintf('wsArray_%s', sessionName)], 'wsArray');
     %     save(sprintf('SessionInfo_%s.mat', sessionName{kk}), 'sessionInfo');
     save(sprintf('wsArray_%s', sessionName), 'wsArray');
     fprintf('Results saved to: \n%s\n', results_save_dir);
+    
+    %% adding this to sessObj
+    sessObj_found = dir('sessObj.mat');
+    if isempty(sessObj_found)
+        sessObj = {};
+        sessObj.wSigTrials = wSigTrials;
+        save('sessObj','sessObj','-v7.3');
+    else
+        load('sessObj.mat');
+        sessObj.wSigTrials = wSigTrials;
+        save('sessObj','sessObj','-v7.3');
+    end
+
+    
 % end
 %%
 matlabpool close

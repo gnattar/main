@@ -1,5 +1,5 @@
 
-function [contact_inds, contact_direction] = whisker_contact_detector_auto_thresh(dToBar, deltaKappa, barFrame_inds, kappaThresh_prior, threshDist0, threshDist_rough)
+function [contact_inds, contact_direction] = whisker_contact_detector_auto_thresh(dToBar, deltaKappa, barFrame_inds, kappaThresh_prior, threshDist0, threshDist_rough,time)
 % Use combination of whisker to bar distance and curvature
 % change for contact detection.
 
@@ -38,9 +38,9 @@ ka_bs = mean(X(ImaxN));
 
 % find the mode of distToBar, constrained between 2x and 0.5 of bar radius
 if isempty(threshDist0)
-    threshDist0 = 0.8;%1.2; % in mm, ~2x of bar radius, which is  17/25.7 = 0.6615. changed for thin bar 8/25.7 = .31
+    threshDist0 = 2.5;%1.2; % in mm, ~2x of bar radius, which is  17/25.7 = 0.6615. changed for thin bar 13/25.7 = .51
 end
-[N,X] = hist(d0 ( d0< threshDist0 & d0 > 0.3 ),20);
+[N,X] = hist(d0 ( d0 > 0.125 &  d0< threshDist0 ),20);
 [~,ImaxN] = max(N);
 d0_mode = X(ImaxN);
 % sd_dist = mad(d0,1)*1.4826;
@@ -53,11 +53,12 @@ end
 if threshKappa > kappaThresh_prior(2)
     threshKappa = kappaThresh_prior(2);
 end
-% fprintf('Kappa Threshold: %.3f\n', threshKappa);
+%  fprintf('Kappa Threshold: %.3f\n', threshKappa);
 
 ka_diff_mean = mean(abs(diff(ka_putative_tch)));
 
 inds_prot = barFrame_inds(d0>threshDist_rough(1) & d0<threshDist_rough(2) & k0 < -threshKappa); % protraction Contact with certain
+
 inds_retr = barFrame_inds(d0>threshDist_rough(1) & d0<threshDist_rough(2) & k0 > threshKappa); % retraction Contact with certain
 
 count = barFrame_inds(1) - 1;
@@ -78,7 +79,11 @@ while count < barFrame_inds(end) - 1
         else
             % Check if the new point is with the same touch direction with p1.
             % Deal with the rebound following a strong Kappa change.
-            if ismember(p1, inds_prot) == ismember(count, inds_prot)
+            prevframeby2 = find(barFrame_inds==max(count-2,barFrame_inds(1)) );
+            
+            k0_overlastframes = k0( prevframeby2:  min(prevframeby2+4,length(barFrame_inds)));
+            dkappa_deflection = find(diff(k0_overlastframes)==0);
+            if (ismember(p1, inds_prot) == ismember(count, inds_prot)) || (~isempty(dkappa_deflection))
                 p2 = count;
             else
                 % roll back, and ready for the end-of-touch check
@@ -88,30 +93,30 @@ while count < barFrame_inds(end) - 1
         end
     elseif p1 > 0 && p2 > 0
         % Got putative touch period: p1:p2, check consistency
-        % This putative touch should last at least 3 frames.
+        % This putative touch should last at least 2 frames.
         stop_count = 0;
         % Length criteria before relaxation. Number of point with Kappa
         % change crossing threshold >=3, or the distance to bar vary within
         % 2 pixels
-        if length(p1:p2) >= 3 || sum(abs(diff(dToBar(p1-1:p2+1))) <= 0.0389*2) >=2,   
+        if length(p1:p2) >= 2 || sum(abs(diff(dToBar(p1-1:p2+1))) <= 0.0389*2) >=2,   
             % determine touch direction, 1 for protraction, 0 for retraction
             touch_direc = mean(ismember(p1:p2, inds_prot)) > mean(ismember(p1:p2, inds_retr));
-            if touch_direc == 1 
-                % For protraction, make sure p1 is NOT on the ascending
-                % phase, and p2 is NOT on the descending phase
-                if (deltaKappa(p1) < deltaKappa(p1+1) && deltaKappa(p1) > deltaKappa(p1-1)) ...
-                        || (deltaKappa(p2) > deltaKappa(p2+1) && deltaKappa(p2) < deltaKappa(p2-1))
-                    p1 = 0;
-                    continue
-                end
-            else % for retraction the begining kappa should be ascending, the ending kappa should desending
-%                 if mean(diff(deltaKappa(p1-2:p1))) < 0 || mean(diff(deltaKappa(p2-1:p2+1))) > 0
-                  if (deltaKappa(p1) > deltaKappa(p1+1) && deltaKappa(p1) < deltaKappa(p1-1)) ...
-                      || (deltaKappa(p2) < deltaKappa(p2+1) && deltaKappa(p2) > deltaKappa(p2-1))
-                    p1 = 0;
-                    continue
-                end
-            end
+% % %             if touch_direc == 1 
+% % %                 % For protraction, make sure p1 is NOT on the ascending
+% % %                 % phase, and p2 is NOT on the descending phase
+% % %                 if (deltaKappa(p1) < deltaKappa(p1+1) && deltaKappa(p1) > deltaKappa(p1-1)) ...
+% % %                         || (deltaKappa(p2) > deltaKappa(p2+1) && deltaKappa(p2) < deltaKappa(p2-1))
+% % %                     p1 = 0;
+% % %                     continue
+% % %                 end
+% % %             else % for retraction the begining kappa should be ascending, the ending kappa should desending
+% % % %                 if mean(diff(deltaKappa(p1-2:p1))) < 0 || mean(diff(deltaKappa(p2-1:p2+1))) > 0
+% % %                   if (deltaKappa(p1) > deltaKappa(p1+1) && deltaKappa(p1) < deltaKappa(p1-1)) ...
+% % %                       || (deltaKappa(p2) < deltaKappa(p2+1) && deltaKappa(p2) > deltaKappa(p2-1))
+% % %                     p1 = 0;
+% % %                     continue
+% % %                 end
+% % %             end
             % end of contact period, relax upto nExtraFrames
             for k = 1: nExtraFrames
                 % relax a few frames but make sure not
@@ -162,7 +167,9 @@ while count < barFrame_inds(end) - 1
             % Restrict contact period to > 6 ms
             
             nContacts = nContacts + 1;
-            contact_inds{nContacts} = p1:p2;
+            inds = p1:p2;
+            FrameTime = time(2)-time(1);
+            contact_inds{nContacts} = round(time(inds)/FrameTime);
             contact_direction(nContacts) = touch_direc;
             % if the current detected contact overlap with the previous one,
             % then append the current to the previus one. But constrained

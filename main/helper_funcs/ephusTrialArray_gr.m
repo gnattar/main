@@ -18,7 +18,7 @@ for i=1:length(files)
        obj(i).licks=[];
        obj(i).bitcode=[];
        obj(i).poleposition=[];
-       obj(i).trialname = [];
+       obj(i).trialname = fname(length(fname)-7:length(fname)-4);
        obj(i).ephuststep = [];
     end
 end
