@@ -48,7 +48,7 @@ function[w_thetaenv]...
          col=jet(length(trialnums));
 
         
-        thetaenv_bins = -40:1:40;
+        thetaenv_bins = -30:1:30;
         nbins=length(thetaenv_bins);
         thetaenv_dist = nan(length(trialnums)+1,nbins);
         thetaenv_trials = nan(length(trialnums)+1,numpoleframes);
@@ -79,9 +79,10 @@ function[w_thetaenv]...
 
                     poleinds =  find( (restrictTime(1)< xt) & (xt<=restrictTime(2)) );
                     prepoleinds = find( (xt>restrictTime(1)-.2) & (xt<=restrictTime(1)));
-
-                    thetaenv_pole = thetaenv( poleinds);
-                    xt_pole = xt( poleinds);
+                    
+                    valinds = poleinds;
+                    thetenv_pole = thetenv( valinds);
+                    xt_pole = xt(poleinds);
 
                     [lia,matchedinds]= ismember( xt_pole,ref_time);
                     thetaenv_trials(i,matchedinds>0) =   thetaenv_pole;                 
@@ -91,7 +92,7 @@ function[w_thetaenv]...
                     thetaenv_med(i,2) =  std(thetaenv_pole);
                     thetaenv_peak(i,1) = max(thetaenv_pole); %% change it to prctile later
                  
-                    temp = thetaenv(prepoleinds);
+                    temp = thetenv(prepoleinds);
                     thetaenv_prepole(i,1) = mean(temp);
 
             end
@@ -120,7 +121,7 @@ function[w_thetaenv]...
         grid on;
 
         data =thetaenv_med(:,1);
-        binned= arrayfun( @(x) mean(data(x: min(x+windowSize-1,end) ),1), 1:windowSize:size(data,1), 'UniformOutput', false);
+        binned_med = arrayfun( @(x) mean(data(x: min(x+windowSize-1,end) ),1), 1:windowSize:size(data,1), 'UniformOutput', false);
         binned=cat(1,binned{:});
         data =thetaenv_med(:,2);
         binned_sdev = arrayfun( @(x) mean(data(x: min(x+windowSize-1,end) ),1), 1:windowSize:size(data,1), 'UniformOutput', false);
@@ -135,8 +136,8 @@ function[w_thetaenv]...
         s = regstats(binned_sdev,trialnums(xbins),'linear','tstat');
         pval(2) = s.tstat.pval(2);
 
-         w_thetaenv.med{blk} = {horzcat(trialnums,thetaenv_med(:,1),thetaenv_med(:,2))}; %%median for restricted time window
-         w_thetaenv.medbinned{blk} = {horzcat(trialnums(xbins),binned,binned_sdev)}; %%median binned withi n restricted time window
+         w_thetaenv.med(blk) = {horzcat(trialnums,thetaenv_med(:,1),thetaenv_med(:,2))}; %%median for restricted time window
+         w_thetaenv.medbinned(blk) = {horzcat(trialnums(xbins),binned,binned_sdev)}; %%median binned withi n restricted time window
 
          
         data = thetaenv_prepole(:,1);
@@ -147,8 +148,8 @@ function[w_thetaenv]...
         pval(3)  = s.tstat.pval(2); % test for non-zero slope of prepole
 
 
-         w_thetaenv.prepole{blk}= {horzcat(trialnums,thetaenv_prepole)};
-         w_thetaenv.prepolebinned{blk}= {horzcat(trialnums(xbins),binned)};
+         w_thetaenv.prepole(blk)= {horzcat(trialnums,thetaenv_prepole)};
+         w_thetaenv.prepolebinned(blk)= {horzcat(trialnums(xbins),binned)};
          
           data = thetaenv_peak(:,1);
         binned = arrayfun( @(x) mean(data(x: min(x+windowSize-1,end) ),1), 1:windowSize:size(data,1), 'UniformOutput', false);
@@ -159,20 +160,20 @@ function[w_thetaenv]...
         pval(4)  = s.tstat.pval(2); % test for non-zero slope of prepol
          text(.5,.02,'Thetaenv Med stdev,  Prepole ,Peak,(K.B.R) ','VerticalAlignment','bottom','HorizontalAlignment','center');
          %['Theta envelope pval ' num2str(pvalsetpoint)
-           w_thetaenv.peak{blk}= {horzcat(trialnums,thetaenv_peak)};
-         w_thetaenv.peakbinned{blk}= {horzcat(trialnums(xbins),binned)};    
-         w_thetaenv.pval {blk}={pval};
+           w_thetaenv.peak(blk)= {horzcat(trialnums,thetaenv_peak)};
+         w_thetaenv.peakbinned(blk)= {horzcat(trialnums(xbins),binned)};    
+         w_thetaenv.pval (blk)={pval};
          
-         w_thetaenv.trials{blk} = {thetaenv_trials};
-         w_thetaenv.time {blk}= {thetaenv_time};
-         w_thetaenv.dist {blk}= {thetaenv_dist};
-         w_thetaenv.bins {blk}= {thetaenv_bins};
+         w_thetaenv.trials(blk) = {thetaenv_trials};
+         w_thetaenv.time (blk)= {thetaenv_time};
+         w_thetaenv.dist (blk)= {thetaenv_dist};
+         w_thetaenv.bins (blk)= {thetaenv_bins};
          
 %%plot dist   
 
         subplot(numblocks*2,2,(blk-1)*2+2);
-        set(0,'DefaultAxesColorOrder',copper(size(thetaenv_dist,1)));  
-        plot(thetaenv_bins',thetaenv_dist','linewidth',0.5);hold on; grid on; 
+        set(0,'DefaultAxesColorOrder',copper(size(binned_trials,1)));  
+        plot(thetaenv_dist,'linewidth',0.5);hold on; grid on; 
         text(.5,.02,'Thetaenv_dist ','VerticalAlignment','bottom','HorizontalAlignment','center');
          
     

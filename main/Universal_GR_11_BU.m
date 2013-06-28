@@ -2761,10 +2761,6 @@ if(isempty(CaTrials))
     load( [pathName filesep filename], '-mat');
 end
 
-nam = strrep(CaTrials(1).FileName_prefix,'Image_Registration_5_','');
-nam = strrep(nam,'_main_','');
-nam = strrep(nam,'_',' ');
-
 if(isempty(sorted_CaTrials))   
     [filename,pathName]=uigetfile('sorted_CaSignal*.mat','Load sorted_CaSignal.mat file')
     if isequal(filename, 0) || isequal(pathName,0)
@@ -2774,8 +2770,6 @@ if(isempty(sorted_CaTrials))
     load( [pathName filesep filename], '-mat');
 end
 
-
-
 if (length(rois) > CaTrials(1).nROIs)
     rois = 1:CaTrials(1).nROIs;
     set(handles.roislist,'String',num2str(rois));
@@ -2784,8 +2778,7 @@ if(get(handles.CaTrials_select,'Value') ==1)
     tag_trialtypes =0;
     sfx='Unsort';
     trialtypes = ones(length(CaTrials),1);
-    
-    plot_roiSignals(CaTrials,fov,rois,roislist,tag_trialtypes,trialtypes,sfx,nam);
+    plot_roiSignals(CaTrials,fov,rois,roislist,tag_trialtypes,trialtypes,sfx);
 elseif(get(handles.sorted_CaTrials_select,'Value') ==1)
 %     global sorted_CaTrials    
     tag_trialtypes =1;
@@ -2819,7 +2812,7 @@ elseif(get(handles.sorted_CaTrials_select,'Value') ==1)
        trialtypes(count+1:count+length(sorted_CaTrials.fa )) = 4; 
     end
     
-    plot_roiSignals(CaTrials(trialorder),fov ,rois,roislist,tag_trialtypes,trialtypes,sfx,nam);
+    plot_roiSignals(CaTrials(trialorder),fov ,rois,roislist,tag_trialtypes,trialtypes,sfx);
     
     if(get(handles.sortwtouchInfo,'Value')==1)
         %% sort by trial time in session
@@ -2833,7 +2826,7 @@ elseif(get(handles.sorted_CaTrials_select,'Value') ==1)
         count = count +length(sorted_CaTrials.touch);        
         trialtypes(count+1:count+length(sorted_CaTrials.notouch )) = 3;
         count = count +length(sorted_CaTrials.notouch );   
-        plot_roiSignals(CaTrials(trialorder),fov ,rois,roislist,tag_trialtypes,trialtypes,sfx,nam);
+        plot_roiSignals(CaTrials(trialorder),fov ,rois,roislist,tag_trialtypes,trialtypes,sfx);
         
         %% sort by bar_pos_trial
         tag_trialtypes =1;
@@ -2862,7 +2855,7 @@ elseif(get(handles.sorted_CaTrials_select,'Value') ==1)
       
         trialorder  = [sorted_CaTrials.touch(touchinds) , sorted_CaTrials.notouch(notouchinds)]; 
         disp('order = touch_barpos_Ant(Top)-Post(Bottom) notouch_barpos_Ant(Top)-Post(Bottom)')       
-        plot_roiSignals(CaTrials(trialorder),fov ,rois,roislist,tag_trialtypes,trialtypes,sfx,nam);
+        plot_roiSignals(CaTrials(trialorder),fov ,rois,roislist,tag_trialtypes,trialtypes,sfx);
 
     end
 else(get(handles.contact_CaSignal_select,'Value')==1)
@@ -2871,7 +2864,7 @@ else(get(handles.contact_CaSignal_select,'Value')==1)
     tag_trialtypes =0;
     sfx ='Csort';
     trialtypes = ones(length(contact_CaTrials),1);
-    plot_roiSignals(contact_CaTrials,fov,rois,roislist,tag_trialtypes,trialtypes,sfx,nam);
+    plot_roiSignals(contact_CaTrials,fov,rois,roislist,tag_trialtypes,trialtypes,sfx);
     
 
 
@@ -2894,7 +2887,7 @@ else(get(handles.contact_CaSignal_select,'Value')==1)
 %         trialorder  = [sorted_CaTrials.touch(touchinds) ];%, sorted_CaTrials.notouch(notouchinds)]; 
      disp('order = touch_barpos_Ant(Top)-Post(Bottom)');% notouch_barpos_Ant(Top)-Post(Bottom)')      
 
-    plot_roiSignals(contact_CaTrials(touchinds),fov,rois,roislist,tag_trialtypes,trialtypes,sfx,nam);
+    plot_roiSignals(contact_CaTrials(touchinds),fov,rois,roislist,tag_trialtypes,trialtypes,sfx);
         
         
 end
@@ -3012,9 +3005,9 @@ global wSigTrials
 %          blocks.nogo_thetaenv_dur{i} =w_thetaenv.dur{i};
 %          blocks.nogo_thetaenv_prepole{i} =w_thetaenv.prepole{i};
 %          blocks.nogo_thetaenv_prepolebinned{i} =w_thetaenv.prepolebinned{i};
-         blocks.nogo_thetaenv_pval= w_thetaenv.pval;
-         blocks.nogo_thetaenv_trials{i} = w_thetaenv.trials{i};
-          blocks.nogo_thetaenv_binned_dist{i} = w_thetaenv.binned_dist{i};      
+         blocks.nogo_thetaenv_pval= w_thetaenv_pval;
+         blocks.nogo.thetaenv_trials{i} = w_thetaenv.trials{i};
+          blocks.nogo.thetaenv_binned_dist{i} = w_thetaenv_binned_dist{i};      
      end
          [w_thetaenv] =  wdatasummary(wSigTrials,blocks.tag,blocks.gotrialnums,avg_trials,gopix,nogopix,restrictTime,p,plot_whiskerfits,'go',timewindowtag);
  
@@ -3027,8 +3020,8 @@ global wSigTrials
 %          blocks.go_thetaenv_prepole{i} =w_thetaenv.prepole{i};
 %          blocks.go_thetaenv_prepolebinned{i} =w_thetaenv.prepolebinned{i};
          blocks.go_thetaenv_pval= w_thetaenv.pval;
-         blocks.go_thetaenv_trials{i} = w_thetaenv.trials{i};
-         blocks.go_thetaenv_binned_dist{i} = w_thetaenv.binned_dist{i};     
+         blocks.go.thetaenv_trials{i} = w_thetaenv.trials{i};
+         blocks.go.thetaenv_binned_dist{i} = w_thetaenv_binned_dist{i};     
      end
      fpath = pwd;
      fpath = [fpath filesep 'plots' filesep timewindowtag];
@@ -3943,11 +3936,10 @@ for j= 1:numblocks
     block =j;
     sc = get(0,'ScreenSize');
     h_fig1 = figure('position', [1000, sc(4)/10-100, sc(3)*3/10, sc(4)*3/4], 'color','w'); %%raw setpoint
-    ah1=axes('Parent',h_fig1); 
-    title([commentstr 'Theta_env Med  ' ]);%blocklist{j} 'Data ' datatoplot]);
+    ah1=axes('Parent',h_fig1); title([commentstr 'Raw Data ' ]);%blocklist{j} 'Data ' datatoplot]);
     
     h_fig2 = figure('position', [300, sc(4)/10-100, sc(3)*3/10, sc(4)*3/4], 'color','w'); %% error from bartheat
-    ah2=axes('Parent',h_fig2); title([commentstr 'Theta_env Med Error  ' ]);%blocklist{j} 'Data ' datatoplot]);
+    ah2=axes('Parent',h_fig2); title([commentstr 'Data Error  ' ]);%blocklist{j} 'Data ' datatoplot]);
     hold on;
 %     figure;
     count =0;
@@ -3962,7 +3954,7 @@ for j= 1:numblocks
 %        binneddata = strrep(datatoplot,'med','medbinned');
        temp = getfield(wSigSummary{i},datatoplot); 
        binnedxdata = temp{block}(:,1)';
-       binnedydata = temp{block}(:,2)';
+       binnedydata = temp{block}(:,mod(get(handles.wSigSum_toplot,'Value'),4)+1)';
        
 % % %        minmaxdata = strrep(datatoplot,'med','width');
 % % %        temp = getfield(wSigSummary{i},minmaxdata); 
@@ -3976,12 +3968,10 @@ for j= 1:numblocks
       
 %         plot(xdata+count,ydata,'color',col(j,:),'linewidth',1.0); hold on;
         if(i<baseline_sessions+1)
-            axis([min(binnedxdata+count) max(binnedxdata+count) -20 20]);
-            plot(binnedxdata+count,binnedydata,'color','k','Marker','o','MarkerSize',6,'MarkerFaceColor','k');hold on;
-            hline(baseline_bartheta,'k--'); 
+            plot(binnedxdata+count,binnedydata,'color','k','Marker','o','MarkerSize',6,'MarkerFaceColor','k');
+            hline(baseline_bartheta,'k--');
         else
-            axis([min(binnedxdata+count) max(binnedxdata+count) -20 20]);
-            plot(binnedxdata+count,binnedydata,'color','k','Marker','o','MarkerSize',6,'MarkerFaceColor','r');hold on;
+            plot(binnedxdata+count,binnedydata,'color','k','Marker','o','MarkerSize',6,'MarkerFaceColor','r');
             hline(bartheta,'r--');
         end
        legendstr(i) = {['session' num2str(i) ' ']};
@@ -3993,149 +3983,130 @@ for j= 1:numblocks
 % % %        plot([count+1:count+length(data)],data-bartheta,'color',col(j,:),'linewidth',1.5);     
     if(i<baseline_sessions+1)
 %        plot(xdata+count,(ydata-baseline_bartheta),'color',col(j,:),'linewidth',1.0);  
-       plot(binnedxdata+count,(binnedydata-baseline_bartheta),'color','k','Marker','o','MarkerSize',6,'MarkerFaceColor','k');hold on;
+       plot(binnedxdata+count,(binnedydata-baseline_bartheta),'color','k','Marker','o','MarkerSize',6,'MarkerFaceColor','k');
     else
         
 %        plot(xdata+count,(ydata-bartheta),'color',col(j,:),'linewidth',1.0);  
-       plot(binnedxdata+count,(binnedydata-bartheta),'color','k','Marker','o','MarkerSize',6,'MarkerFaceColor','r');hold on;
+       plot(binnedxdata+count,(binnedydata-bartheta),'color','k','Marker','o','MarkerSize',6,'MarkerFaceColor','r');
     end   
        legendstr(i) = {['session' num2str(i) ' ']};
 
-          count = count+binnedxdata(end)+10;
+          count = count+xdata(end)+10;
 
     end
-    axes(ah1); axis([0 count -20 20]);grid on; ylabel('median(binned thetaenv)'); xlabel('Trials');
-    title('Binned median Theta env');
+    axes(ah1); axis([0 count -20 20]);grid on;
    
-   saveas(gcf,['allsessions_thetaenv_med_bl ' blocklist{j}] ,'tif');  
-   saveas(gcf,['allsessions_thetaenv_med_bl' blocklist{j}],'fig');
+   saveas(gcf,['allsessions_theta_bl ' blocklist{j}] ,'tif');  
+   saveas(gcf,['allsessions_theta_bl' blocklist{j}],'fig');
    
-   axes(ah2);axis([0 count -20 20]);grid on; ylabel('Theta env error (from expected bar position)'); xlabel('Trials');
+   axes(ah2);axis([0 count -20 20]);grid on;
    saveas(gcf,['allsessions_error_bl ' blocklist{j}] ,'tif');  
    saveas(gcf,['allsessions_error_bl' blocklist{j}],'fig');
 end
 % title([commentstr ' Block ' blocklist{j} ]);
  hold off;
 
- 
- % plotting thrmed
-for j= 1:numblocks
-    block =j;
-    sc = get(0,'ScreenSize');
-    figure('position', [1000, sc(4)/10-100, sc(3)*3/10, sc(4)*3/4], 'color','w'); %%raw theta
-%     title([commentstr 'Amplitude Block ' blocklist{j} 'Data ' 'Amp_med']);
-    title([commentstr 'Thresholded med ' ]);%blocklist{j} 'Data ' datatoplot]);
-    hold on;
-    count =0;
-    prev=0;   
-    for i = 1:numsessions
-
-       temp = getfield(wSigSummary{i},datatoplot); 
-       binnedxdata = temp{block}(:,1)';
-       binnedydata = temp{block}(:,3)';    
-
-     if(i<baseline_sessions+1)
-         axis([min(binnedxdata+count) max(binnedxdata+count) -20 20]);
-         plot(binnedxdata+count,binnedydata,'color','k','Marker','o','MarkerSize',6,'MarkerFaceColor','k');hold on;
-        hline(baseline_bartheta,'k--'); 
-     else
-         axis([min(binnedxdata+count) max(binnedxdata+count) -20 20]);
-         plot(binnedxdata+count,binnedydata,'color','k','Marker','o','MarkerSize',6,'MarkerFaceColor','r');hold on;
-        hline(bartheta,'r--'); 
-     end
-       
-        legendstr(i) = {['session' num2str(i) ' ']};
-       wSigSum_Sessions.thrmed_binned{i,j}= [binnedxdata;binnedydata]';
-  
-          count = count+binnedxdata(end)+10;
-
-    end
-    axis([0 count -20 20]);grid on; ylabel('Thresholded binned thetaenv'); xlabel('Trials');
-   saveas(gcf,['allsessions_thrmed_bl ' blocklist{j}] ,'tif');  
-   saveas(gcf,['allsessions_thrmed_bl' blocklist{j}],'fig');
-end
-% title([commentstr ' Block ' blocklist{j} ]);
- hold off;
- 
- 
-  % plotting thr_dur
-for j= 1:numblocks
-    block =j;
-    sc = get(0,'ScreenSize');
-  figure('position', [1000, sc(4)/10-100, sc(3)*3/10, sc(4)*3/4], 'color','w'); 
-    title([commentstr 'Thetaenv Thresholded Duration' ]); %' blocklist{j}]);
-
-    hold on;
-    count =0;
-    prev=0;   
-    for i = 1:numsessions
-
-       temp = getfield(wSigSummary{i},datatoplot); 
-       binnedxdata = temp{block}(:,1)';
-       binnedydata = temp{block}(:,4)';      
-
-      if(i<baseline_sessions+1)
-         plot(binnedxdata+count,binnedydata,'color','k','Marker','o','MarkerSize',6,'MarkerFaceColor','k');
-          
-      else
-          plot(binnedxdata+count,binnedydata,'color','k','Marker','o','MarkerSize',6,'MarkerFaceColor','r');
-          
-      end
-
-      
-        legendstr(i) = {['session' num2str(i) ' ']};
-
-       wSigSum_Sessions.thr_durbinned{i,j}= [binnedxdata;binnedydata]';
-  
-          count = count+binnedxdata(end)+10;
-
-    end
-    axis([0 count 0 2]);grid on; ylabel('Dur of theta_env above threshold (s)'); xlabel('Trials');
-   saveas(gcf,['allsessions_thrdur_bl ' blocklist{j}] ,'tif');  
-   saveas(gcf,['allsessions_thrdur_bl' blocklist{j}],'fig');
-end
-% title([commentstr ' Block ' blocklist{j} ]);
- hold off;
- 
- 
-  % plotting kurtosis
-for j= 1:numblocks
-    block =j;
-    sc = get(0,'ScreenSize');
-  figure('position', [1000, sc(4)/10-100, sc(3)*3/10, sc(4)*3/4], 'color','w'); 
-    title([commentstr 'Thetaenv Kurtosis' ]); %' blocklist{j}]);
-
-    hold on;
-    count =0;
-    prev=0;   
-    for i = 1:numsessions
-
-       temp = getfield(wSigSummary{i},datatoplot); 
-       binnedxdata = temp{block}(:,1)';
-       binnedydata = temp{block}(:,5)';      
-
-      if(i<baseline_sessions+1)
-         plot(binnedxdata+count,binnedydata,'color','k','Marker','o','MarkerSize',6,'MarkerFaceColor','k');
-        
-      else
-          plot(binnedxdata+count,binnedydata,'color','k','Marker','o','MarkerSize',6,'MarkerFaceColor','r');
-    
-      end
-
-      
-        legendstr(i) = {['session' num2str(i) ' ']};
-
-       wSigSum_Sessions.kurtbinned{i,j}= [binnedxdata;binnedydata]';
-  
-          count = count+binnedxdata(end)+10;
-
-    end
-    axis([0 count 0 20]);grid on; ylabel('Kurtosis (binned thetaenv)'); xlabel('Trials');
-   saveas(gcf,['allsessions_kurt_bl ' blocklist{j}] ,'tif');  
-   saveas(gcf,['allsessions_kurt_bl' blocklist{j}],'fig');
-end
-% title([commentstr ' Block ' blocklist{j} ]);
- hold off;
+% % %  
+% % %  % plotting amp
+% % % for j= 1:numblocks
+% % %     block =j;
+% % %     sc = get(0,'ScreenSize');
+% % %     figure('position', [1000, sc(4)/10-100, sc(3)*3/10, sc(4)*3/4], 'color','w'); %%raw theta
+% % % %     title([commentstr 'Amplitude Block ' blocklist{j} 'Data ' 'Amp_med']);
+% % %     title([commentstr 'Whisker Amplitude ' ]);%blocklist{j} 'Data ' datatoplot]);
+% % %     hold on;
+% % %     count =0;
+% % %     prev=0;   
+% % %     for i = 1:numsessions
+% % %         ampdata = strrep(datatoplot,'setpoint','amp');
+% % %        temp = getfield(wSigSummary{i},ampdata); 
+% % %        ydata = temp{block}(:,2)';
+% % %        xdata = temp{block}(:,1)';
+% % %        binneddata = strrep(ampdata,'med','medbinned');
+% % %         temp = getfield(wSigSummary{i},binneddata); 
+% % %        binnedydata = temp{block}(:,2)';
+% % %        binnedxdata = temp{block}(:,1)';      
+% % % % % %        xdata = strrep(datatoplot,'_setpoint_trials_med','');
+% % % % % %        xdata = ([xdata 'trialnums']);
+% % % % % %        temp = getfield(wSigSummary{i},xdata); 
+% % % % % %        xval= temp{block};
+% % %        
+% % %        %binning over 25 trials
+% % % % % %        windowSize=25;
+% % % % % %        data=filter(ones(1,windowSize)/windowSize,1,data);
+% % % % % %        plottemp=data;
+% % % % % %         plottemp(1:25)=plottemp(26);
+% % % % % %          plottemp(2:24)=nan;
+% % %  
+% % % % % %       plot([count+1:count+length(plottemp)],plottemp,'color',col(j,:),'linewidth',1.5);
+% % % 
+% % %        plot(xdata+count,ydata,'color',col(j,:),'linewidth',1.0);hold on;
+% % %      if(i<baseline_sessions+1)
+% % %          plot(binnedxdata+count,binnedydata,'color','k','Marker','o','MarkerSize',6,'MarkerFaceColor','k');
+% % %      else
+% % %          plot(binnedxdata+count,binnedydata,'color','k','Marker','o','MarkerSize',6,'MarkerFaceColor','r');
+% % %      end
+% % %        
+% % %         legendstr(i) = {['session' num2str(i) ' ']};
+% % %        wSigSum_Sessions.amp{i,j}=[xdata;ydata]';
+% % %        wSigSum_Sessions.ampbinned{i,j}= [binnedxdata;binnedydata]';
+% % %   
+% % %           count = count+xdata(end)+10;
+% % % 
+% % %     end
+% % %     axis([0 count -1 30]);grid on;
+% % %    saveas(gcf,['allsessions_amplitude_bl ' blocklist{j}] ,'tif');  
+% % %    saveas(gcf,['allsessions_amplitude_bl' blocklist{j}],'fig');
+% % % end
+% % % % title([commentstr ' Block ' blocklist{j} ]);
+% % %  hold off;
+% % %  
+% % %  
+% % %   % plotting prewhisk_setpoint
+% % % for j= 1:numblocks
+% % %     block =j;
+% % %     sc = get(0,'ScreenSize');
+% % %   figure('position', [1000, sc(4)/10-100, sc(3)*3/10, sc(4)*3/4], 'color','w'); 
+% % %     title([commentstr 'Prewhisk_Setpoinbt' ]); %' blocklist{j}]);
+% % % 
+% % %     hold on;
+% % %     count =0;
+% % %     prev=0;   
+% % %     for i = 1:numsessions
+% % %         prewhiskdata = strrep(datatoplot,'med','prewhisk');
+% % %        temp = getfield(wSigSummary{i},prewhiskdata); 
+% % %        ydata = temp{block}(:,2)';
+% % %        xdata = temp{block}(:,1)';
+% % %        binneddata = strrep(prewhiskdata,'prewhisk','prewhiskbinned');
+% % %         temp = getfield(wSigSummary{i},binneddata); 
+% % %        binnedydata = temp{block}(:,2)';
+% % %        binnedxdata = temp{block}(:,1)';      
+% % %  
+% % %        plot(xdata+count,ydata,'color',col(j,:),'linewidth',1);hold on;
+% % %       if(i<baseline_sessions+1)
+% % %          plot(binnedxdata+count,binnedydata,'color','k','Marker','o','MarkerSize',6,'MarkerFaceColor','k');
+% % %           hline(baseline_bartheta,'k--');
+% % %       else
+% % %           plot(binnedxdata+count,binnedydata,'color','k','Marker','o','MarkerSize',6,'MarkerFaceColor','r');
+% % %           hline(bartheta,'r--');
+% % %       end
+% % %       
+% % %     
+% % %       
+% % %         legendstr(i) = {['session' num2str(i) ' ']};
+% % %        wSigSum_Sessions.setpoint_prewhisk{i,j}=[xdata;ydata]';
+% % %        wSigSum_Sessions.setpoint_prewhiskbinned{i,j}= [binnedxdata;binnedydata]';
+% % %   
+% % %           count = count+xdata(end)+10;
+% % % 
+% % %     end
+% % %     axis([0 count -20 20]);grid on;
+% % %    saveas(gcf,['allsessions_prewhisk_setpoint_bl ' blocklist{j}] ,'tif');  
+% % %    saveas(gcf,['allsessions_prewhisk_setpoint_bl' blocklist{j}],'fig');
+% % % end
+% % % % title([commentstr ' Block ' blocklist{j} ]);
+% % %  hold off;
+% % %  
  
    folder=uigetdir;
    cd(folder);

@@ -122,7 +122,8 @@ if ~exist(fullfile(results_save_dir, sprintf('wsArray_%s.mat',sessionName)),'fil
 %                 wSigTrials{i} = wSigTrials{i}.recompute_cached_mean_theta_kappa({trajectory_IDs, theta_kappa_roi,theta_kappa_roi,theta_kappa_roi});
                 wSigTrials{i} = wSigTrials{i}.recompute_cached_mean_theta_kappa(theta_kappa_roi_array); %% GR change multiwhisker
                 wSigTrials{i} = wSigTrials{i}.recompute_cached_follicle_coords(extrap_distance_in_pix);
-
+                
+        %% add totalTouchKappaTrial and thetaenvelope here
                 
                 
         end
@@ -154,7 +155,7 @@ else
         for k=1:length(trajectory_IDs),
             tid = trajectory_IDs(k);
             if ~isempty(bar_coords)
-                wSigTrials{i} = wSigTrials{i}.get_distToBar(tid);
+                wSigTrials{i} = wSigTrials{i}.get_distToBar(tid);            
 %                 wSigTrials{i} = wSigTrials{i}.mean_theta_kappa_near_bar(tid);
             end
             theta_kappa_roi_array{k+1}= wsArray.theta_kappa_roi;
@@ -162,11 +163,12 @@ else
             
 %             wSigTrials{i} = wSigTrials{i}.recompute_cached_mean_theta_kappa({trajectory_IDs, wsArray.theta_kappa_roi}); %GRchange removed {:} from theta_kappa_roi
             wSigTrials{i} = wSigTrials{i}.recompute_cached_mean_theta_kappa(theta_kappa_roi_array); % multiwhisker 
-            ('thetakapparoi_done')
+
             wSigTrials{i} = wSigTrials{i}.recompute_cached_follicle_coords(extrap_distance_in_pix);
-            ('folliclecoords_done')
+            
         
     end
+    wsArray = NX_WhiskerSignalTrialArray([],wSigTrials);
     wsArray.ws_trials = wSigTrials;
    
 end
@@ -204,12 +206,17 @@ end
     barTimeWindow = [1 2.5];
     contDet_param.bar_time_window = barTimeWindow;
     [contact_inds, contact_direct] = Contact_detection_session_auto(wsArray, contDet_param);
-    %
+    wsArray = NX_WhiskerSignalTrialArray([],wSigTrials);
+
     for i = 1:wsArray.nTrials
         wsArray.ws_trials{i}.contacts = contact_inds{i};
         wsArray.ws_trials{i}.contact_direct = contact_direct{i};
+         wsArray.ws_trials{i}.totalTouchKappaTrial = wsArray.totalTouchKappaTrial{1}(i);
+        wsArray.ws_trials{i}.maxTouchKappaTrial = wsArray.maxTouchKappaTrial{1}(i);
     end
-    % wsArray.ws_trials = wSigTrials;
+
+    wsArray.ws_trials = wSigTrials;
+%     wSigTrials{i} = wSigTrials{i}.get_totTouchKappa_trial;
     cd(results_save_dir);
     %     save(sprintf('SessionInfo_%s.mat', sessionName{kk}), 'sessionInfo');
     save(sprintf('wsArray_%s', sessionName), 'wsArray');

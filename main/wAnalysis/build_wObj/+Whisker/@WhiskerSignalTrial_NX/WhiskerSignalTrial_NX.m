@@ -17,6 +17,9 @@ classdef WhiskerSignalTrial_NX < Whisker.WhiskerSignalTrial
         imagePixelDimsXY = [];
         distToBar = {};
         tip_coords = {};
+        totalTouchKappaTrial = {};
+        maxTouchKappaTrial = {};
+          
         %         touch_on = {};
         %         touch_off = {};
         
