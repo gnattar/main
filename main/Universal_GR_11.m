@@ -3005,30 +3005,34 @@ global wSigTrials
         [w_thetaenv] =  wdatasummary(wSigTrials,blocks.tag,blocks.nogotrialnums,avg_trials,gopix,nogopix,restrictTime,p,plot_whiskerfits,'nogo',timewindowtag);
 
     for i=1:numblocks
-
-%          blocks.nogo_thetaenv_med{i} = w_thetaenv.med{i};
-         blocks.nogo_thetaenv_binned{i} = w_thetaenv.binned{i};
-%          blocks.nogo_thetaenv_width{i} = w_thetaenv.width{i};
-%          blocks.nogo_thetaenv_dur{i} =w_thetaenv.dur{i};
-%          blocks.nogo_thetaenv_prepole{i} =w_thetaenv.prepole{i};
-%          blocks.nogo_thetaenv_prepolebinned{i} =w_thetaenv.prepolebinned{i};
-         blocks.nogo_thetaenv_pval= w_thetaenv.pval;
+        
          blocks.nogo_thetaenv_trials{i} = w_thetaenv.trials{i};
-          blocks.nogo_thetaenv_binned_dist{i} = w_thetaenv.binned_dist{i};      
+         blocks.nogo_thetaenv_time{i} = w_thetaenv.time{i};
+         blocks.nogo_thetaenv_dist{i} = w_thetaenv.dist{i};
+         blocks.nogo_thetaenv_bins{i} = w_thetaenv.bins{i};
+         blocks.nogo_thetaenv_med{i} = w_thetaenv.med{i};
+         blocks.nogo_thetaenv_medbinned{i} = w_thetaenv.medbinned{i};
+         blocks.nogo_thetaenv_peak{i} = w_thetaenv.peak{i};
+         blocks.nogo_thetaenv_peakbinned{i} =w_thetaenv.peakbinned{i};
+         blocks.nogo_thetaenv_prepole{i} =w_thetaenv.prepole{i};
+         blocks.nogo_thetaenv_prepolebinned{i} =w_thetaenv.prepolebinned{i};
+         blocks.nogo_thetaenv_pval= w_thetaenv.pval;
+   
      end
          [w_thetaenv] =  wdatasummary(wSigTrials,blocks.tag,blocks.gotrialnums,avg_trials,gopix,nogopix,restrictTime,p,plot_whiskerfits,'go',timewindowtag);
  
     for i=1:numblocks
-
-%          blocks.go_thetaenv_med{i} = w_thetaenv.med{i};
-         blocks.go_thetaenv_binned{i} = w_thetaenv.binned{i};
-%          blocks.go_thetaenv_width{i} = w_thetaenv.width{i};
-%          blocks.go_thetaenv_dur{i} =w_thetaenv.dur{i};
-%          blocks.go_thetaenv_prepole{i} =w_thetaenv.prepole{i};
-%          blocks.go_thetaenv_prepolebinned{i} =w_thetaenv.prepolebinned{i};
-         blocks.go_thetaenv_pval= w_thetaenv.pval;
          blocks.go_thetaenv_trials{i} = w_thetaenv.trials{i};
-         blocks.go_thetaenv_binned_dist{i} = w_thetaenv.binned_dist{i};     
+         blocks.go_thetaenv_time{i} = w_thetaenv.time{i};
+         blocks.go_thetaenv_dist{i} = w_thetaenv.dist{i};
+         blocks.go_thetaenv_bins{i} = w_thetaenv.bins{i};
+         blocks.go_thetaenv_med{i} = w_thetaenv.med{i};
+         blocks.go_thetaenv_medbinned{i} = w_thetaenv.medbinned{i};
+         blocks.go_thetaenv_peak{i} = w_thetaenv.peak{i};
+         blocks.go_thetaenv_peakbinned{i} =w_thetaenv.peakbinned{i};
+         blocks.go_thetaenv_prepole{i} =w_thetaenv.prepole{i};
+         blocks.go_thetaenv_prepolebinned{i} =w_thetaenv.prepolebinned{i};
+         blocks.go_thetaenv_pval= w_thetaenv.pval;    
      end
      fpath = pwd;
      fpath = [fpath filesep 'plots' filesep timewindowtag];

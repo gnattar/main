@@ -37,7 +37,7 @@ function[w_thetaenv]...
 
        fpath = [p '/plots/' timewindowtag '/' str];
    
-    fnam=[str 'ftheta.tif'];
+    fnam=[str 'thetaEnv.tif'];
     h1=figure('Name','Set point plot'); 
     set(0,'CurrentFigure',h1);
     suptitle(['M:' obj{1}.mouseName ' S:' obj{1}.sessionName ' B: ' str ]);
@@ -48,9 +48,9 @@ function[w_thetaenv]...
          col=jet(length(trialnums));
 
         
-        thetaenv_bins = -40:1:40;
+        thetaenv_bins = -50:1:50;
         nbins=length(thetaenv_bins);
-        thetaenv_dist = nan(length(trialnums)+1,nbins);
+        thetaenv_dist = nan(length(trialnums),nbins);
         thetaenv_trials = nan(length(trialnums)+1,numpoleframes);
 
         thetaenv_med = nan(length(trialnums),1);
@@ -60,8 +60,9 @@ function[w_thetaenv]...
          thetaenv_time =   ref_time; 
          numpoleframes = length(ref_time);
          
-        count =1;
+%        count =1;
         for(i=1:1:length(trialnums))
+
             t = trialnums(i);
             frames = length(obj{t}.theta{1,1});
             if(frames<1500)
@@ -86,10 +87,11 @@ function[w_thetaenv]...
                     [lia,matchedinds]= ismember( xt_pole,ref_time);
                     thetaenv_trials(i,matchedinds>0) =   thetaenv_pole;                 
                    
-                    thetaenv_dist(i,:) = hist(thetaenv_pole,thetaenv_bins);
+                    thetaenv_dist(i,:) = hist(thetaenv_pole,thetaenv_bins)./length(thetaenv_pole);
                     thetaenv_med(i,1) = median(thetaenv_pole);
                     thetaenv_med(i,2) =  std(thetaenv_pole);
-                    thetaenv_peak(i,1) = max(thetaenv_pole); %% change it to prctile later
+
+                    thetaenv_peak(i,1) = prctile(thetaenv_pole,85); %% change it to prctile later
                  
                     temp = thetaenv(prepoleinds);
                     thetaenv_prepole(i,1) = mean(temp);
@@ -99,19 +101,19 @@ function[w_thetaenv]...
 
         hold off;
         avg_trials = floor(length(trialnums)/3);
-        if(count-1<=avg_trials)
-             avg_trials = count-2;
-             disp ([ 'there are only' num2str(count-1) ' good trials , reduced trialstoavg to ' num2str(count-2)]);
+        if(i-1<=avg_trials)
+             avg_trials = i-2;
+             disp ([ 'there are only' num2str(i-1) ' good trials , reduced trialstoavg to ' num2str(i-2)]);
         end
 
         earlyinds= [50:50+avg_trials] ;             
-        lateinds= [count-1-avg_trials : count-1] ;
+        lateinds= [i-1-avg_trials : i-1] ;
 
         
 
 %%plot thetaenv _med,peak,prepole  
 
-       subplot(numblocks*2,2,(blk-1)*2+1);
+       subplot(numblocks*2,3,(blk-1)*2+1);
        up = thetaenv_med(:,1)+thetaenv_med(:,2);
        low=thetaenv_med(:,1)-thetaenv_med(:,2);
        jbfill(trialnums',up',low',[.8 .8 .8],[.8 .8 .8],1,.5);hold on;
@@ -170,21 +172,32 @@ function[w_thetaenv]...
          
 %%plot dist   
 
-        subplot(numblocks*2,2,(blk-1)*2+2);
-        set(0,'DefaultAxesColorOrder',copper(size(thetaenv_dist,1)));  
-        plot(thetaenv_bins',thetaenv_dist','linewidth',0.5);hold on; grid on; 
+        subplot(numblocks*2,3,(blk-1)*2+2);
+        set(gcf,'DefaultAxesColorOrder',copper(size(thetaenv_dist,1)));  
+         plot(thetaenv_bins',thetaenv_dist','linewidth',0.25);hold on; grid on; 
+         
+          set(gcf,'DefaultAxesColorOrder',jet(size(thetaenv_peak,1)));
+         line([thetaenv_peak'; thetaenv_peak'], [ones(1,length(thetaenv_peak))*.9; ones(1,length(thetaenv_peak))*.95],'linewidth',1);         
+        line([thetaenv_med(:,1)'; thetaenv_med(:,1)'], [ones(1,length(thetaenv_med(:,1)))*.8; ones(1,length(thetaenv_med(:,1)))*.85],'linewidth',1);
+        axis ([-50 50 0 1]);grid on;
         text(.5,.02,'Thetaenv_dist ','VerticalAlignment','bottom','HorizontalAlignment','center');
+
+        subplot(numblocks*2,3,(blk-1)*2+3);
+        temp= [thetaenv_med(:,1) thetaenv_peak(:,1) ];
+        set(gcf,'DefaultAxesColorOrder',copper(size(temp,1)));  
+        plot(temp','linewidth',1); axis ([0 3 -50 50]);
+        
          
     
      %%plot thetaenv first and last n trials
           
          xt = thetaenv_time;
-         subplot(numblocks*2,2,(numblocks+blk-1)*2+3);plot(xt,thetaenv_trials(earlyinds(1:2:end),:),'color',[.5 .5 .5],'linewidth',1); hold on; 
-         avg_thetaenv = mean(thetaenv_trials(earlyinds,:),1);plot(xt,avg_thetaenv,'linewidth',1.5,'color','k');hold off;
+         subplot(numblocks*2,3,(blk-1)*2+4);plot(xt,thetaenv_trials(earlyinds(1:2:end),:),'color',[.5 .5 .5],'linewidth',1); hold on; 
+         avg_thetaenv = nanmean(thetaenv_trials(earlyinds,:));plot(xt,avg_thetaenv,'linewidth',1.5,'color','k');hold off;
          axis([restrictTime(1),restrictTime(2),-30,30]);set(gca,'YGrid','on');
          set(gca,'YTick',-30:10:30);
-         subplot(numblocks*2,2,(numblocks+blk-1)*2+4); plot(xt,thetaenv_trials(lateinds(1:2:end),:),'color',[1 .5 .5],'linewidth',1); hold on;   
-         avg_thetaenv = mean(thetaenv_trials(lateinds,:),1); plot(xt,avg_thetaenv,'linewidth',1.5,'color','r'); grid on;   hold off;
+         subplot(numblocks*2,3,(blk-1)*2+5); plot(xt,thetaenv_trials(lateinds(1:2:end),:),'color',[1 .5 .5],'linewidth',1); hold on;   
+         avg_thetaenv = nanmean(thetaenv_trials(lateinds,:),1); plot(xt,avg_thetaenv,'linewidth',1.5,'color','r'); grid on;   hold off;
          axis([restrictTime(1),restrictTime(2),-30,30]);set(gca,'YGrid','on');
          set(gca,'YTick',-30:10:30);
          freezeColors;    
@@ -193,9 +206,30 @@ function[w_thetaenv]...
         saveas(gcf,[fpath,filesep,fnam],'tif');
         close(h1);
       
- 
-        
+        h1b= figure;count =1
+        for trl = 1:20: size(thetaenv_dist,1)
+               endtrl  = count*20;
+               strtrl = endtrl -19;  
+            if (trl +20 >  size(thetaenv_dist,1))
+                endtrl  =size(thetaenv_dist,1);
+            end  
+           subplot ( ceil(size(thetaenv_dist,1)/20 ), 1,count);
+            set(gcf,'DefaultAxesColorOrder',copper(20));  
+           plot(thetaenv_bins(1,:),thetaenv_dist(strtrl:endtrl,:),'linewidth',1.5); grid on;hold on;
+           line([thetaenv_peak(strtrl:endtrl,1)'; thetaenv_peak(strtrl:endtrl,1)'], [ones(1,endtrl-strtrl+1)*.8; ones(1,endtrl-strtrl+1)*.95],'linewidth',1.5);         
+
+           count = count +1;
+        end
+        fnam = [ str 'Thetaenv_Dist'];
+        saveas(gcf,[fpath,filesep,fnam],'tif');
+        close(h1b);
      
+        if strcmp(str,'nogo')
+            figure;
+            for p = 1:size(thetaenv_dist,1)
+              plot(thetaenv_bins(1,:),thetaenv_dist(p,:),'linewidth',1.5); grid on;hold on;line([thetaenv_peak(p,1)'; thetaenv_peak(p,1)'], [ones(1,1)*.05; ones(1,1)*.15],'linewidth',1.5);hold off; title(['Dist of trial' num2str(p) str timewindowtag]);saveas (gcf,[fpath,filesep,'Dist' num2str(p)],'tif');
+            end
+        end
     %% plot kappa
  
     fnam=[str 'fkappa.tif'];
