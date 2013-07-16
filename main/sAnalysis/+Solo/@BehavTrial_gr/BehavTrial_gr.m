@@ -32,6 +32,7 @@ classdef BehavTrial_gr < handle
         Dprime = [];
         PercentCorrect = [];
         goPosition_mean = [];
+        goPosition_runmean = [];
     end
 
 

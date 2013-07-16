@@ -1,17 +1,23 @@
 
 function[w_thetaenv]...
-    =  wdatasummary(obj,block_tags,block_trialnums,avg_trials,gopix,nogopix,restrictTime,p,plot_whiskerfits,str,timewindowtag)
+    =  wdatasummary(sessionInfo,obj,block_tags,block_trialnums,avg_trials,gopix,nogopix,restrictTime,pd,plot_whiskerfits,str,timewindowtag)
 %% new version : compare within block & with top 90% percentile of setpoint values
 % w_setpoint_trials % all setpoint values from all trials  entire length
 % w_setpoint_early % within the restricted time window from early trials
 % w_setpoint_late % within the restricted time window from late trials
 % w_setpoint_trials_med % mean of 90th percentile of setpoint values within window
-%w_setpoint_trials_width std of the points avgd over
+% w_setpoint_trials_width std of the points avgd over
 
-    w_thetaenv = struct('trials',[],'time',[],'dist',[],'bins',[],'med',[],'medbinned',[],'peak',[],'peakbinned',[],'prepole',[],'prepolebinned',[],'pval',[]);
+    w_thetaenv = struct('trials',[],'time',[],'dist',[],'bins',[],'med',[],'medbinned',[],'meanbarcross',[],'meanbarcrossbinned',[],'prepole',[],'prepolebinned',[],'prcpastmeanbar',[],'pval',[]);
     numblocks = size(block_tags,2);
+    
+%% get mean bar theta cut off
+     x = sessionInfo.gopos;
+     y  = sort(sessionInfo.go_bartheta,'ascend');
+     p=polyfit(x,y,1);
+     mean_bartheta = polyval(p,median(sessionInfo.goPosition_mean)*10000);
+    
 %% plot theta
-
     point = max(gopix);
     gopix(:,2) = point(1,2);
     nogopix(1,2) = point(1,2);
@@ -21,23 +27,23 @@ function[w_thetaenv]...
     maxframes = max(cell2mat(frames_list));
    numpoleframes = (restrictTime(2)-restrictTime(1))*500;
 
-    if~(exist([p '/plots/'],'dir'))
-       mkdir (p,'plots') ;
-    end
+    if~(exist([pd '/plots/'],'dir'))
+       mkdir (pd,'plots') ;
+    end                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             
     
-    fpath = [p '/plots/'];
+    fpath = [pd '/plots/'];
     if ~(exist([fpath timewindowtag],'dir'))
        mkdir (fpath,timewindowtag) ;
     end
     
-    fpath = [p '/plots/' timewindowtag '/'];
+    fpath = [pd '/plots/' timewindowtag '/'];
     if ~(exist([fpath str],'dir'))
        mkdir (fpath,str) ;
     end
 
-       fpath = [p '/plots/' timewindowtag '/' str];
+       fpath = [pd '/plots/' timewindowtag '/' str];
    
-    fnam=[str 'ftheta.tif'];
+    fnam=[str 'thetaEnv.tif'];
     h1=figure('Name','Set point plot'); 
     set(0,'CurrentFigure',h1);
     suptitle(['M:' obj{1}.mouseName ' S:' obj{1}.sessionName ' B: ' str ]);
@@ -45,16 +51,16 @@ function[w_thetaenv]...
     
     for(blk=1:numblocks)
         trialnums = block_trialnums{blk};
-         col=jet(length(trialnums));
-
-        
+         col=jet(length(trialnums));  
         thetaenv_bins = -50:1:50;
         nbins=length(thetaenv_bins);
-        thetaenv_dist = nan(length(trialnums)+1,nbins);
+        thetaenv_dist = nan(length(trialnums),nbins);
         thetaenv_trials = nan(length(trialnums)+1,numpoleframes);
 
-        thetaenv_med = nan(length(trialnums),1);
+        thetaenv_med = nan(length(trialnums),2);
         thetaenv_peak = nan(length(trialnums),1);
+        thetaenv_meanbarcross = nan(length(trialnums),2);
+        thetaenv_prcpastmeanbar = nan(length(trialnums),1);
         thetaenv_prepole = nan(length(trialnums),1);    
          ref_time = restrictTime(1)+.002:.002:restrictTime(2);ref_time=round(ref_time.*1000)./1000;
          thetaenv_time =   ref_time; 
@@ -62,6 +68,7 @@ function[w_thetaenv]...
          
 %        count =1;
         for(i=1:1:length(trialnums))
+
             t = trialnums(i);
             frames = length(obj{t}.theta{1,1});
             if(frames<1500)
@@ -86,12 +93,24 @@ function[w_thetaenv]...
                     [lia,matchedinds]= ismember( xt_pole,ref_time);
                     thetaenv_trials(i,matchedinds>0) =   thetaenv_pole;                 
                    
-                    thetaenv_dist(i,:) = hist(thetaenv_pole,thetaenv_bins)./length(thetaenv_pole);
+                    thetaenv_dist(i,:) = histnorm(thetaenv_pole,thetaenv_bins);%./length(thetaenv_pole);
+                    past_meanbar= find(thetaenv_bins>mean_bartheta);
                     thetaenv_med(i,1) = median(thetaenv_pole);
                     thetaenv_med(i,2) =  std(thetaenv_pole);
 
-                    thetaenv_peak(i,1) = prctile(thetaenv_pole,98); %% change it to prctile later
-                 
+                    thetaenv_peak(i,1) = prctile(thetaenv_pole,85); %% change it to prctile later
+                     
+                    thetaenv_prcpastmeanbar(i,1) = sum(thetaenv_dist(i,past_meanbar));
+                    temp = find(thetaenv_pole > mean_bartheta)
+                    if ~isempty(temp)
+                        thetaenv_meanbarcross(i,1) = mean(thetaenv_pole > mean_bartheta);
+                        thetaenv_meanbarcross(i,2) = std(thetaenv_pole > mean_bartheta);
+                        
+                    end
+
+                    
+
+                    
                     temp = thetaenv(prepoleinds);
                     thetaenv_prepole(i,1) = mean(temp);
 
@@ -110,7 +129,7 @@ function[w_thetaenv]...
 
         
 
-%%plot thetaenv _med,peak,prepole  
+%%plot thetaenv _med,meanbarcross,prepole  
 
        subplot(numblocks*2,3,(blk-1)*2+1);
        up = thetaenv_med(:,1)+thetaenv_med(:,2);
@@ -151,53 +170,77 @@ function[w_thetaenv]...
          w_thetaenv.prepole{blk}= {horzcat(trialnums,thetaenv_prepole)};
          w_thetaenv.prepolebinned{blk}= {horzcat(trialnums(xbins),binned)};
          
-          data = thetaenv_peak(:,1);
+        data = thetaenv_meanbarcross(:,1);
         binned = arrayfun( @(x) mean(data(x: min(x+windowSize-1,end) ),1), 1:windowSize:size(data,1), 'UniformOutput', false);
         binned=cat(1,binned{:}); 
-       plot(trialnums(xbins),binned,'color','r','linewidth',1,'Marker','o');  grid on;       
+        data =thetaenv_meanbarcross(:,2);
+        binned_sdev = arrayfun( @(x) mean(data(x: min(x+windowSize-1,end) ),1), 1:windowSize:size(data,1), 'UniformOutput', false);
+        binned_sdev=cat(1,binned_sdev{:});
+        
+%        plot(trialnums(xbins),binned,'color','r','linewidth',1,'Marker','o');  grid on;   
+        errorbar(trialnums(xbins),binned,binned_sdev,'linewidth',1.5,'color','r','Marker','o');hold on;
+        
          axis([min(trialnums) max(trialnums) -30 30]);
          s = regstats(binned,trialnums(xbins),'linear','tstat');
-        pval(4)  = s.tstat.pval(2); % test for non-zero slope of prepol
-         text(.5,.02,'Thetaenv Med stdev,  Prepole ,Peak,(K.B.R) ','VerticalAlignment','bottom','HorizontalAlignment','center');
+        pval(4)  = s.tstat.pval(2); % test for non-zero slope of meanbarthetacross
+        s = regstats(binned_sdev,trialnums(xbins),'linear','tstat');
+        pval(5) = s.tstat.pval(2);
+        
+         text(.5,.02,'Thetaenv Med stdev,  Prepole ,meanbarcross,(K.B.R) ','VerticalAlignment','bottom','HorizontalAlignment','center');
          %['Theta envelope pval ' num2str(pvalsetpoint)
-           w_thetaenv.peak{blk}= {horzcat(trialnums,thetaenv_peak)};
-         w_thetaenv.peakbinned{blk}= {horzcat(trialnums(xbins),binned)};    
-         w_thetaenv.pval {blk}={pval};
+         w_thetaenv.meanbarcross{blk}= {horzcat(trialnums,thetaenv_meanbarcross)};
+         w_thetaenv.meanbarcrossbinned{blk}= {horzcat(trialnums(xbins),binned)};    
+
          
          w_thetaenv.trials{blk} = {thetaenv_trials};
          w_thetaenv.time {blk}= {thetaenv_time};
+
+%%plot dist   
+
+        subplot(numblocks*2,3,(blk-1)*2+3);
+        set(gcf,'DefaultAxesColorOrder',copper(size(thetaenv_dist,1)));  
+         plot(thetaenv_bins',thetaenv_dist','linewidth',0.25);hold on; grid on; 
+         cummu_dist = histnorm(thetaenv_trials,thetaenv_bins);
+        plot(thetaenv_bins',cummu_dist','linewidth',0.5,'color',[.5 .5 .5]); hold on;
+           set(gcf,'DefaultAxesColorOrder',jet(size(thetaenv_meanbarcross,1)));
+         line([thetaenv_meanbarcross'; thetaenv_meanbarcross'], [ones(1,length(thetaenv_meanbarcross))*.9; ones(1,length(thetaenv_meanbarcross))*.95],'linewidth',1);         
+        line([thetaenv_med(:,1)'; thetaenv_med(:,1)'], [ones(1,length(thetaenv_med(:,1)))*.8; ones(1,length(thetaenv_med(:,1)))*.85],'linewidth',1);
+        
+
+        axis ([-50 50 0 1]);grid on;
+        text(.5,.02,'Thetaenv_dist ','VerticalAlignment','bottom','HorizontalAlignment','center');
+
+        subplot(numblocks*2,3,(blk-1)*2+2);
+% % %         temp= [thetaenv_med(:,1) thetaenv_meanbarcross(:,1) ];
+% % %         set(gcf,'DefaultAxesColorOrder',copper(size(temp,1)));  
+% % %         plot(temp','linewidth',1); axis ([0 3 -50 50]);
+        
+        plot(trialnums,thetaenv_prcpastmeanbar(:,1),'linewidth',1,'color',[.5 .5 .5]); hold on;
+        windowSize=25;
+        grid on;
+
+          data = thetaenv_prcpastmeanbar(:,1);
+        binned = arrayfun( @(x) mean(data(x: min(x+windowSize-1,end) ),1), 1:windowSize:size(data,1), 'UniformOutput', false);
+        binned=cat(1,binned{:}); 
+        
+        binned_sdev = arrayfun( @(x) std(data(x: min(x+windowSize-1,end) ),1), 1:windowSize:size(data,1), 'UniformOutput', false);
+        binned_sdev=cat(1,binned_sdev{:});
+         
+        errorbar(trialnums(xbins),binned,binned_sdev,'linewidth',1.5,'color','k','Marker','o');hold on;
+        s = regstats(binned,trialnums(xbins),'linear','tstat');
+        pval(6)  = s.tstat.pval(2); % test for non-zero slope of prc tiem spent beyond mean bar theta
+
+        
+        
          w_thetaenv.dist {blk}= {thetaenv_dist};
          w_thetaenv.bins {blk}= {thetaenv_bins};
          
-%%plot dist   
+         w_thetaenv.prcpastmeanbar{blk}= {horzcat(trialnums,thetaenv_prcpastmeanbar)};
+         w_thetaenv.prcpastmeanbarbinned{blk}= {horzcat(trialnums(xbins),binned)};    
 
-        subplot(numblocks*2,3,(blk-1)*2+2);
-        set(gcf,'DefaultAxesColorOrder',copper(size(thetaenv_dist,1)));  
-         plot(thetaenv_bins',thetaenv_dist','linewidth',0.25);hold on; grid on; 
-         
-          set(gcf,'DefaultAxesColorOrder',jet(size(thetaenv_peak,1)));
-         line([thetaenv_peak'; thetaenv_peak'], [ones(1,length(thetaenv_peak))*.9; ones(1,length(thetaenv_peak))*.95],'linewidth',1.5)
-         
-        line([thetaenv_med(:,1)'; thetaenv_med(:,1)'], [ones(1,length(thetaenv_med(:,1)))*.8; ones(1,length(thetaenv_med(:,1)))*.85],'linewidth',1.5)
-         %         patch(thetaenv_bins',thetaenv_dist',copper(size(thetaenv_dist,1)),'EdgeAlpha', 0.1, 'FaceColor', 'none'),
-%         set(get(sg, 'Children'), 'FaceAlpha', 0.2);
-        text(.5,.02,'Thetaenv_dist ','VerticalAlignment','bottom','HorizontalAlignment','center');
-        
-        figure;count =1
-        for trl = 1:10: size(thetaenv_dist,1)
-            if (trl +10 <  size(thetaenv_dist,1))
-                
-           subplot ( size(thetaenv_dist,1)/10 
-        end
-        
-        
-        subplot(numblocks*2,3,(blk-1)*2+3);
-        temp= [thetaenv_med(:,1) thetaenv_peak(:,1) ];
-%         xtemp = zeros(size(temp)); xtemp(:,2) = 1;
-        set(gcf,'DefaultAxesColorOrder',copper(size(temp,1)));  
-        plot(temp','linewidth',.25); axis ([0 3 -50 50]);
-        
-         
+         w_thetaenv.pval {blk}={pval};
+
+
     
      %%plot thetaenv first and last n trials
           
@@ -216,9 +259,30 @@ function[w_thetaenv]...
         saveas(gcf,[fpath,filesep,fnam],'tif');
         close(h1);
       
- 
-        
+        h1b= figure;count =1
+        for trl = 1:20: size(thetaenv_dist,1)
+               endtrl  = count*20;
+               strtrl = endtrl -19;  
+            if (trl +20 >  size(thetaenv_dist,1))
+                endtrl  =size(thetaenv_dist,1);
+            end  
+           subplot ( ceil(size(thetaenv_dist,1)/20 ), 1,count);
+            set(gcf,'DefaultAxesColorOrder',copper(20));  
+           plot(thetaenv_bins(1,:),thetaenv_dist(strtrl:endtrl,:),'linewidth',1.5); grid on;hold on;
+           line([thetaenv_meanbarcross(strtrl:endtrl,1)'; thetaenv_meanbarcross(strtrl:endtrl,1)'], [ones(1,endtrl-strtrl+1)*.8; ones(1,endtrl-strtrl+1)*.95],'linewidth',1.5);         
+
+           count = count +1;
+        end
+        fnam = [ str 'Thetaenv_Dist'];
+        saveas(gcf,[fpath,filesep,fnam],'tif');
+        close(h1b);
      
+        if strcmp(str,'nogo')
+            figure;
+            for p = 1:size(thetaenv_dist,1)
+              plot(thetaenv_bins(1,:),thetaenv_dist(p,:),'linewidth',1.5); grid on;hold on;line([thetaenv_meanbarcross(p,1)'; thetaenv_meanbarcross(p,1)'], [ones(1,1)*.05; ones(1,1)*.15],'linewidth',1.5);hold off; title(['Dist of trial' num2str(p) str timewindowtag]);saveas (gcf,[fpath,filesep,'Dist' num2str(p)],'tif');
+            end
+        end
     %% plot kappa
  
     fnam=[str 'fkappa.tif'];

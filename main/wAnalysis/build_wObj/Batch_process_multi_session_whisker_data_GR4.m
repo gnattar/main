@@ -55,7 +55,7 @@ if matlabpool('size')<1
 end
 
 if ~exist(fullfile(results_save_dir, sprintf('wsArray_%s.mat',sessionName)),'file')
-    if ~exist(sprintf('wSigTrials_%s.mat',sessionName), 'file')
+    if ~exist(fullfile(results_save_dir,sprintf('wSigTrials_%s_%s.mat',animalName,sessionName)), 'file')
         wst_files = dir('*WST.mat');
         whiskers_files = dir('*.whiskers');
         if length(wst_files) < length(whiskers_files)
@@ -73,7 +73,7 @@ if ~exist(fullfile(results_save_dir, sprintf('wsArray_%s.mat',sessionName)),'fil
 
         
         parfor i=1:length(wSigTrials) %length(wst_files),
-%              fprintf('-----------Start processing trial %d --------------------------\n',i);
+              fprintf('-----------Start processing trial %d --------------------------\n',i);
            
             wst = load(wst_files(i).name);
            
@@ -105,8 +105,10 @@ if ~exist(fullfile(results_save_dir, sprintf('wsArray_%s.mat',sessionName)),'fil
 
         end
     else
-        load(sprintf('wSigTrials_%s.mat',sessionName{kk}));
-        parfor i=1:length(wSigTrials) %length(wst_files),
+        cd(results_save_dir);
+        load(sprintf('wSigTrials_%s_%s.mat',animalName,sessionName));
+        %%parfor
+       parfor i=1:length(wSigTrials) %length(wst_files),
             wSigTrials{i}.bar_pos_trial = bar_coords(i,:);
             wSigTrials{i}.bar_time_win = barTimeWindow; % sessionInfo.bar_time_window;
             theta_kappa_roi_array = {trajectory_IDs};
@@ -200,10 +202,10 @@ end
 %% Touch detection. 
 % For air puff trials, no bar coordinates, and no touch detection.
 % if ~isempty(bar_coords)
-    contDet_param.threshDistToBarCenter = [.1   .55];
+    contDet_param.threshDistToBarCenter = [.1   .55];%[.1   .55];
     contDet_param.thresh_deltaKappa = [-0.1	0.1];
     % contDet_param.bar_time_window = cellfun(@(x) x.bar_time_win, wsArray.ws_trials,'UniformOutput', false);
-    barTimeWindow = [1 2.5];
+    barTimeWindow = [.9 2.5];
     contDet_param.bar_time_window = barTimeWindow;
     [contact_inds, contact_direct] = Contact_detection_session_auto(wsArray, contDet_param);
     wsArray = NX_WhiskerSignalTrialArray([],wSigTrials);
@@ -213,6 +215,10 @@ end
         wsArray.ws_trials{i}.contact_direct = contact_direct{i};
          wsArray.ws_trials{i}.totalTouchKappaTrial = wsArray.totalTouchKappaTrial{1}(i);
         wsArray.ws_trials{i}.maxTouchKappaTrial = wsArray.maxTouchKappaTrial{1}(i);
+    
+        inds = (wsArray.ws_trials{i}.distToBar{1} <  contDet_param.threshDistToBarCenter (2));
+        wsArray.ws_trials{i}.mThetaNearBar =mean(wsArray.ws_trials{i}.theta{1}(inds));
+        wsArray.ws_trials{i}.mKappaNearBar =mean(wsArray.ws_trials{i}.kappa{1}(inds));
     end
 
     wsArray.ws_trials = wSigTrials;
@@ -220,6 +226,7 @@ end
     cd(results_save_dir);
     %     save(sprintf('SessionInfo_%s.mat', sessionName{kk}), 'sessionInfo');
     save(sprintf('wsArray_%s', sessionName), 'wsArray');
+    save(sprintf('wSigTrials_%s_%s',animalName,sessionName), 'wSigTrials');
     fprintf('Results saved to: \n%s\n', results_save_dir);
     
     %% adding this to sessObj

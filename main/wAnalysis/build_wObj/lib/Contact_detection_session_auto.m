@@ -51,11 +51,7 @@ for i = 1:nTrials
     barRadiusInPx = 13;
      poletime = ws.bar_time_win;
     if isempty(poletime)
-        poletime = [1,2.5];
-    end
-    
-    if i == 61
-        'pausing here for T 75'
+        poletime = [.9,2.5];
     end
     
     for k = 1: length(wsArray.trajIDs)
@@ -88,6 +84,8 @@ for i = 1:nTrials
 
 %         contact_inds{i}{k} = whisker_contact_detector4 ( d2bar, deltaKappa, ...
 %             barFrInds, threshDist, threshKappa,barPos,tip_coords,barRadiusInPx,ts);
+
+
         end
     end
      waitbar(i/wsArray.nTrials, hw, sprintf('Contact detection %d trials', i));

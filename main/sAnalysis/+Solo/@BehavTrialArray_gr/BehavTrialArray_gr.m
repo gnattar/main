@@ -17,6 +17,10 @@ classdef BehavTrialArray_gr < handle
         %         performanceRegion = []; % Beginning and ending behavioral trial numbers for block of trials in which mouse is performing.
         trials = {};
         goPosition_mean =[];
+        goPosition_runmean =[];
+        Dprime_contact = [];
+        PC_contact = [];
+        whisker_trials = [];
     end
     
     properties (Dependent = true)
@@ -80,8 +84,9 @@ classdef BehavTrialArray_gr < handle
                        goprob_trials(:,j) = eval(goprob);
                     end
 
-                    obj.goPosition_mean=diag(cell2mat(gopos_trials)*cell2mat(goprob_trials'));
-                end
+                       obj.goPosition_runmean = diag(cell2mat(gopos_trials)*cell2mat(goprob_trials'));
+                   end
+                    
             end
         end
         
