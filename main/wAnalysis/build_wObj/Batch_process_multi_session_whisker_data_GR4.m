@@ -205,7 +205,7 @@ end
     contDet_param.threshDistToBarCenter = [.1   .55];%[.1   .55];
     contDet_param.thresh_deltaKappa = [-0.1	0.1];
     % contDet_param.bar_time_window = cellfun(@(x) x.bar_time_win, wsArray.ws_trials,'UniformOutput', false);
-    barTimeWindow = [.9 2.5];
+    barTimeWindow = [1.5 2.5];
     contDet_param.bar_time_window = barTimeWindow;
     [contact_inds, contact_direct] = Contact_detection_session_auto(wsArray, contDet_param);
     wsArray = NX_WhiskerSignalTrialArray([],wSigTrials);

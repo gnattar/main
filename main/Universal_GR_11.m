@@ -22,7 +22,7 @@ function varargout = Universal_GR_11(varargin)
 
 % Edit the above text to modify the response to help Universal_GR_11
  
-% Last Modified by GUIDE v2.5 11-Jul-2013 17:57:38
+% Last Modified by GUIDE v2.5 18-Jul-2013 11:19:31
 
 % Begin initialization code - DO NOT EDIT
 
@@ -3008,7 +3008,9 @@ global wSigTrials
   
 % %      [w_setpoint_trials,w_setpoint_trials_med,w_setpoint_trials_medbinned,w_setpoint_trials_width,w_setpoint_trials_dur,w_setpoint_trials_prewhisk,w_setpoint_trials_prewhiskbinned,pvalsetpoint,...
 % %          w_amp_trials,w_thetaenv_trials,w_thetaenv_dist,w_amp_trials_med,w_amp_trials_medbinned,w_amp_trials_width,pvalamp]= wdatasummary(wSigTrials,blocks.tag,blocks.nogotrialnums,avg_trials,gopix,nogopix,restrictTime,p,plot_whiskerfits,'nogo',timewindowtag);
-        [w_thetaenv] =  wdatasummary(sessionInfo,wSigTrials,blocks.tag,blocks.nogotrialnums,avg_trials,gopix,nogopix,restrictTime,pd,plot_whiskerfits,'nogo',timewindowtag);
+        min_meanbarpos = str2double(get(handles.min_meanbartheta,'String'));
+        baseline_barpos = str2double(get(handles.baseline_meanbarpos,'String'));
+    [w_thetaenv] =  wdatasummary(sessionInfo,wSigTrials,blocks.tag,blocks.nogotrialnums,avg_trials,gopix,nogopix,restrictTime,pd,plot_whiskerfits,'nogo',timewindowtag,min_meanbarpos,baseline_barpos);
 
     for i=1:numblocks
         
@@ -3029,10 +3031,10 @@ global wSigTrials
          blocks.nogo_thetaenv_prepole{i} =w_thetaenv.prepole{i};
          blocks.nogo_thetaenv_prepolebinned{i} =w_thetaenv.prepolebinned{i};
          blocks.nogo_thetaenv_pval{i}= w_thetaenv.pval{i};
-         blocks.nogo_thetaenv_meanbar{i} =  w_thetaenv.mean_barpos{i};
-   
+         blocks.nogo_thetaenv_biased_barpos{i} =  w_thetaenv.biased_barpos{i};
+         blocks.nogo_thetaenv_baseline_barpos{i} =  w_thetaenv.baseline_barpos{i};
      end
-         [w_thetaenv] =  wdatasummary(sessionInfo,wSigTrials,blocks.tag,blocks.gotrialnums,avg_trials,gopix,nogopix,restrictTime,pd,plot_whiskerfits,'go',timewindowtag);
+         [w_thetaenv] =  wdatasummary(sessionInfo,wSigTrials,blocks.tag,blocks.gotrialnums,avg_trials,gopix,nogopix,restrictTime,pd,plot_whiskerfits,'go',timewindowtag,min_meanbarpos,baseline_barpos);
  
     for i=1:numblocks
          blocks.go_thetaenv_trials{i} = w_thetaenv.trials{i};
@@ -3052,8 +3054,8 @@ global wSigTrials
          blocks.go_thetaenv_prepole{i} =w_thetaenv.prepole{i};
          blocks.go_thetaenv_prepolebinned{i} =w_thetaenv.prepolebinned{i};
          blocks.go_thetaenv_pval{i}= w_thetaenv.pval{i};  
-         blocks.go_thetaenv_meanbar{i} =  w_thetaenv.mean_barpos{i};
-
+         blocks.go_thetaenv_biased_barpos{i} =  w_thetaenv.biased_barpos{i};
+         blocks.go_thetaenv_baseline_barpos{i} =  w_thetaenv.baseline_barpos{i};
      end
      fpath = pwd;
      fpath = [fpath filesep 'plots' filesep timewindowtag];
@@ -3711,7 +3713,7 @@ function contactdetect_Callback(hObject, eventdata, handles)
     contDet_param.threshDistToBarCenter = [.1   .55];% [.1   .55];
     contDet_param.thresh_deltaKappa = [-.1	.1];
 %      contDet_param.bar_time_window = cellfun(@(x) x.bar_time_win, wsArray.ws_trials,'UniformOutput', false);
-    barTimeWindow = [0.9 2.5];
+    barTimeWindow = [1.5 2.5];
     contDet_param.bar_time_window = barTimeWindow;
     contact_inds = cell(wsArray.nTrials,1);
     contact_direct = cell(wsArray.nTrials,1);
@@ -4013,6 +4015,11 @@ wSigSum_Sessions = struct([]);
 
 biased_bartheta= str2num(get(handles.current_bartheta,'String'));
 baseline_bartheta = str2num(get(handles.unbiased_bartheta,'String'));
+
+temp = cell2mat(cellfun(@(x) x.nogo_thetaenv_biased_barpos{1}{1},wSigSummary,'uniformoutput',false));
+biased_bartheta = mean(temp);
+temp = cell2mat(cellfun(@(x) x.nogo_thetaenv_baseline_barpos{1}{1},wSigSummary,'uniformoutput',false));
+baseline_bartheta = mean(temp);
 plotlist = get(handles.wSigSum_toplot,'String');
 datatoplot= plotlist{get(handles.wSigSum_toplot,'Value')};
 
@@ -4058,9 +4065,10 @@ for j= 1:numblocks
            temp = temp{1};
            binnedxdata = temp{block}(:,1)';
            binnedydata = temp{block}(:,2)';
-           mean_bartheta = getfield(wSigSummary{i},strrep(datatoplot,'databinned','meanbar'));
-           mean_bartheta  = cell2mat(mean_bartheta {1});
-          axes(ah1);  
+           binnedydata_sdev = temp{block}(:,3)';
+%            mean_bartheta = getfield(wSigSummary{i},strrep(datatoplot,'databinned','meanbar'));
+%            mean_bartheta  = cell2mat(mean_bartheta {1});
+           axes(ah1);  
     %       jbfill([count+1:count+length(data)],upper,lower,col(j,:),col(j,:),1,transparency); hold on;
     %       plot([count+1:count+length(data)],data,'color',col(j,:),'linewidth',1.5);
 
@@ -4068,16 +4076,16 @@ for j= 1:numblocks
             if(i<baseline_sessions+1)
                 tcol = colr(:,:,1);
                 axis([min(binnedxdata+count) max(binnedxdata+count) -40 40]);
-                plot(binnedxdata+count,binnedydata,'color',tcol(k,:),'Marker','o','MarkerSize',6,'MarkerFaceColor',tcol(k,:));hold on;
+                errorbar(binnedxdata+count,binnedydata,binnedydata_sdev,'color',tcol(k,:),'Marker','o','MarkerSize',6,'MarkerFaceColor',tcol(k,:));hold on;
 %                 hline(baseline_bartheta,'k--'); 
-                hline(mean_bartheta ,'k--'); 
+                hline(baseline_bartheta ,'k--'); 
 
             else
                 tcol = colr(:,:,2);
                 axis([min(binnedxdata+count) max(binnedxdata+count) -40 40]);
-                plot(binnedxdata+count,binnedydata,'color',tcol(k,:),'Marker','o','MarkerSize',6,'MarkerFaceColor',tcol(k,:));hold on;
+                errorbar(binnedxdata+count,binnedydata,binnedydata_sdev,'color',tcol(k,:),'Marker','o','MarkerSize',6,'MarkerFaceColor',tcol(k,:));hold on;
 %                 hline(biased_bartheta,'r--');
-                hline(mean_bartheta,'r--');
+                hline(biased_bartheta,'r--');
 
             end
            collateddata = [binnedxdata;binnedydata]'; 
@@ -4097,13 +4105,12 @@ for j= 1:numblocks
     % % %        plot([count+1:count+length(data)],data-bartheta,'color',col(j,:),'linewidth',1.5);     
             if(i<baseline_sessions+1)
                 tcol = colr(:,:,1);
-        %        plot(xdata+count,(ydata-baseline_bartheta),'color',col(j,:),'linewidth',1.0);  
-        
-               plot(binnedxdata+count,(binnedydata-baseline_bartheta),'color',tcol(k,:),'Marker','o','MarkerSize',6,'MarkerFaceColor',tcol(k,:));hold on;
+        %        plot(xdata+count,(ydata-baseline_bartheta),'color',col(j,:),'linewidth',1.0);     
+               errorbar(binnedxdata+count,(binnedydata-baseline_bartheta),binnedydata_sdev,'color',tcol(k,:),'Marker','o','MarkerSize',6,'MarkerFaceColor',tcol(k,:));hold on;
             else
                 tcol = colr(:,:,2);    
         %        plot(xdata+count,(ydata-bartheta),'color',col(j,:),'linewidth',1.0);  
-               plot(binnedxdata+count,(binnedydata-biased_bartheta),'color',tcol(k,:),'Marker','o','MarkerSize',6,'MarkerFaceColor',tcol(k,:));hold on;
+               errorbar(binnedxdata+count,(binnedydata-biased_bartheta),binnedydata_sdev,'color',tcol(k,:),'Marker','o','MarkerSize',6,'MarkerFaceColor',tcol(k,:));hold on;
             end   
            legendstr(i) = {['session' num2str(i) ' ']};
            hline(0,'r--');
@@ -4177,7 +4184,7 @@ end
  hold off;
  
  
-  % plotting thr_dur
+  % plotting mean past meanbarpos
 for j= 1:numblocks
     block =j;
     sc = get(0,'ScreenSize');
@@ -4194,20 +4201,20 @@ for j= 1:numblocks
           temp = temp{1};
        binnedxdata = temp{block}(:,1)';
        binnedydata = temp{block}(:,2)';     
-       
-         mean_bartheta = getfield(wSigSummary{i},strrep(datatoplot,'databinned','meanbar'));
-          mean_bartheta  = cell2mat(mean_bartheta {1});
+       binnedydata_sdev = temp{block}(:,3)'; 
+% %          mean_bartheta = getfield(wSigSummary{i},strrep(datatoplot,'databinned','meanbar'));
+% %           mean_bartheta  = cell2mat(mean_bartheta {1});
 
       if(i<baseline_sessions+1)
-         axis([min(binnedxdata+count) max(binnedxdata+count) -20 20]);
-         plot(binnedxdata+count,binnedydata,'color',[.5 .5 .5],'Marker','o','MarkerSize',6,'MarkerFaceColor',[.5 .5 .5]);
+         axis([min(binnedxdata+count) max(binnedxdata+count) -40 40]);
+         errorbar(binnedxdata+count,binnedydata,binnedydata_sdev,'color',[.5 .5 .5],'Marker','o','MarkerSize',6,'MarkerFaceColor',[.5 .5 .5]);
 %          hline(baseline_bartheta,'k--');
-             hline(mean_bartheta,'k--');
+             hline(baseline_bartheta,'k--');
       else
-          axis([min(binnedxdata+count) max(binnedxdata+count) -20 20]);
-          plot(binnedxdata+count,binnedydata,'color',[0 0 0 ],'Marker','o','MarkerSize',6,'MarkerFaceColor',[0 0 0 ]);
+          axis([min(binnedxdata+count) max(binnedxdata+count) -40 40]);
+          errorbar(binnedxdata+count,binnedydata,binnedydata_sdev,'color',[0 0 0 ],'Marker','o','MarkerSize',6,'MarkerFaceColor',[0 0 0 ]);
 %           hline(biased_bartheta,'r--'); 
-         hline(mean_bartheta,'r--'); 
+         hline(biased_bartheta,'r--'); 
       end
 
       
@@ -4219,7 +4226,7 @@ for j= 1:numblocks
           count = count+binnedxdata(end)+10;
 
     end
-    axis([0 count -20 20]);grid on; ylabel('Mean thetaenv past barpos'); xlabel('Trials');
+    axis([0 count -40 40]);grid on; ylabel('Mean thetaenv past barpos'); xlabel('Trials');
    saveas(gcf,['allsessions_meanpastbarpos_bl ' blocklist{j}] ,'tif');  
    saveas(gcf,['allsessions_meanpastbarpos_bl' blocklist{j}],'fig');
 end
@@ -4892,3 +4899,37 @@ sessionInfo.go_bartheta   = go_bartheta;
 
 cd (pathName);
  save(filename1, 'sessionInfo');
+
+
+
+function min_meanbartheta_Callback(hObject, eventdata, handles)
+
+% --- Executes during object creation, after setting all properties.
+function min_meanbartheta_CreateFcn(hObject, eventdata, handles)
+
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function baseline_meanbarpos_Callback(hObject, eventdata, handles)
+% hObject    handle to baseline_meanbarpos (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of baseline_meanbarpos as text
+%        str2double(get(hObject,'String')) returns contents of baseline_meanbarpos as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function baseline_meanbarpos_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to baseline_meanbarpos (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end

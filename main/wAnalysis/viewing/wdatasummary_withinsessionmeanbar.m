@@ -1,6 +1,6 @@
 
 function[w_thetaenv]...
-    =  wdatasummary(sessionInfo,obj,block_tags,block_trialnums,avg_trials,gopix,nogopix,restrictTime,pd,plot_whiskerfits,str,timewindowtag,min_meanbarpos,baseline_barpos)
+    =  wdatasummary(sessionInfo,obj,block_tags,block_trialnums,avg_trials,gopix,nogopix,restrictTime,pd,plot_whiskerfits,str,timewindowtag)
 %% new version : compare within block & with top 90% percentile of setpoint values
 % w_setpoint_trials % all setpoint values from all trials  entire length
 % w_setpoint_early % within the restricted time window from early trials
@@ -23,12 +23,10 @@ function[w_thetaenv]...
       y = sort(y ,'ascend');
 
      p=polyfit(x,y,1);
-%      mean_selecttrials = nanmedian(sessionInfo.goPosition_runmean(block_trialnums{1}));
-     mean_selecttrials = min_meanbarpos;
+     mean_selecttrials = nanmedian(sessionInfo.goPosition_runmean(block_trialnums{1}));
      mean_bartheta = polyval(p,mean_selecttrials*10000);
      shoulder = 2.5; % avg 5 deg between pole positions , should = 2.5 deg
-     baseline_bartheta = polyval(p,baseline_barpos*10000);
-     
+
     point = max(gopix);
     gopix(:,2) = point(1,2);
     nogopix(1,2) = point(1,2);
@@ -109,7 +107,7 @@ function[w_thetaenv]...
                     thetaenv_med(i,1) = mean(thetaenv_pole);
                     thetaenv_med(i,2) =  std(thetaenv_pole);
                     
-                    prc = prctile(thetaenv_pole,90);
+                    prc = prctile(thetaenv_pole,95);
                     temp = thetaenv_pole(thetaenv_pole>prc);
                     thetaenv_peak(i,1) = mean(temp); %% change it to prctile later
                     thetaenv_peak(i,2) = std(temp);
@@ -316,9 +314,7 @@ function[w_thetaenv]...
          w_thetaenv.prcpastmeanbarbinned{blk}= {horzcat(trialnums(xbins),binned)};    
 
          w_thetaenv.pval {blk}={pval};
-          w_thetaenv.biased_barpos{blk} = {mean_bartheta};
-           w_thetaenv.baseline_barpos{blk} = {baseline_bartheta};
-          
+          w_thetaenv.mean_barpos{blk} = {mean_bartheta};
 
 
     
