@@ -4129,9 +4129,11 @@ for j= 1:numblocks
         title('Mean subtracted Theta env Med Prepole Peak - K B R');
        saveas(gcf,['allsessions_error_bl ' blocklist{j}] ,'tif');  
        saveas(gcf,['allsessions_error_bl' blocklist{j}],'fig');
+        hold off;
+       plot_dist_sessions(commentstr,numsessions);
 end
 % title([commentstr ' Block ' blocklist{j} ]);
- hold off;
+
 
  
  % plotting prcpastmeanbar and meanbarcross

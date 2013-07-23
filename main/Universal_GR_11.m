@@ -4225,7 +4225,7 @@ for j= 1:numblocks
    saveas(gcf,['allsessions_meanpastbarpos_bl ' blocklist{j}] ,'tif');  
    saveas(gcf,['allsessions_meanpastbarpos_bl' blocklist{j}],'fig');
     hold off;
-    plot_dist_sessions(commentstr,numsessions)
+    plot_dist_sessions(commentstr,numsessions);
 end
 % title([commentstr ' Block ' blocklist{j} ]);
 
