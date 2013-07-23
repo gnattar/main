@@ -1168,7 +1168,7 @@ end
 CaTrials = CaSignal.CaTrials;
 save(CaSignal.results_fn, 'CaTrials','ICA_results','-v7.3');
 save(CaSignal.results_roiinfo, 'ROIinfo','-v7.3');
-save(fullfile(CaSignal.results_path, ['ICA_ROIs_', FileName_prefix '.mat']), 'ICA_ROIs');
+% save(fullfile(CaSignal.results_path, ['ICA_ROIs_', FileName_prefix '.mat']), 'ICA_ROIs');
 msg_str = sprintf('CaTrials Saved, with %d trials, %d ROIs', length(CaSignal.CaTrials), CaSignal.CaTrials(TrialNo).nROIs);
 disp(msg_str);
 set(handles.msgBox, 'String', msg_str);
@@ -4229,10 +4229,13 @@ for j= 1:numblocks
     axis([0 count -40 40]);grid on; ylabel('Mean thetaenv past barpos'); xlabel('Trials');
    saveas(gcf,['allsessions_meanpastbarpos_bl ' blocklist{j}] ,'tif');  
    saveas(gcf,['allsessions_meanpastbarpos_bl' blocklist{j}],'fig');
+    hold off;
+    plot_dist_sessions(commentstr,numsessions)
 end
 % title([commentstr ' Block ' blocklist{j} ]);
- hold off;
+
  
+
  
 % % %   % plotting kurtosis
 % % % for j= 1:numblocks

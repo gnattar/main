@@ -1,7 +1,7 @@
 
-%%
-anm = 'gr199201';
-numSess = 8;
+function plot_dist_sessions(anm,numSess)
+% anm = 'gr199201';
+% numSess = 8;
  sc = get(0,'ScreenSize');
 figure('position', [1000, sc(4)/10-100, sc(3)*3/10, sc(4)*3/4], 'color','w');
 suptitle ([anm 'Normalized Thetaenv_distributions from Sessions']);
