@@ -1,36 +1,36 @@
-function varargout = Universal_GR_11(varargin)
-% UNIVERSAL_GR_11 M-file for Universal_GR_11.fig
-%      UNIVERSAL_GR_11, by itself, creates a new UNIVERSAL_GR_11 or raises the existing
+function varargout = Universal_GR_12(varargin)
+% UNIVERSAL_GR_12 M-file for Universal_GR_12.fig
+%      UNIVERSAL_GR_12, by itself, creates a new UNIVERSAL_GR_12 or raises the existing
 %      singleton*.
 %
-%      H = UNIVERSAL_GR_11 returns the handle to a new UNIVERSAL_GR_11 or the handle to
+%      H = UNIVERSAL_GR_12 returns the handle to a new UNIVERSAL_GR_12 or the handle to
 %      the existing singleton*.
 %
-%      UNIVERSAL_GR_11('CALLBACK',hObject,eventData,handles,...) calls the local
-%      function named CALLBACK in UNIVERSAL_GR_11.M with the given input arguments.
+%      UNIVERSAL_GR_12('CALLBACK',hObject,eventData,handles,...) calls the local
+%      function named CALLBACK in UNIVERSAL_GR_12.M with the given input arguments.
 % 
-%      UNIVERSAL_GR_11('Property','Value',...) creates a new UNIVERSAL_GR_11 or raises the
+%      UNIVERSAL_GR_12('Property','Value',...) creates a new UNIVERSAL_GR_12 or raises the
 %      existing singleton*.  Starting from the left, property value pairs are
-%      applied to the GUI before Universal_GR_11_OpeningFcn gets called.  An
+%      applied to the GUI before Universal_GR_12_OpeningFcn gets called.  An
 %      unrecognized property name or invalid value makes property application
-%      stop.  All inputs are passed to Universal_GR_11_OpeningFcn via varargin.
+%      stop.  All inputs are passed to Universal_GR_12_OpeningFcn via varargin.
 %
 %      *See GUI Options on GUIDE's Tools menu.  Choose "GUI allows only one
 %      instance to run (singleton)".
 %
 % See also: GUIDE, GUIDATA, GUIHANDLES
 
-% Edit the above text to modify the response to help Universal_GR_11
+% Edit the above text to modify the response to help Universal_GR_12
  
-% Last Modified by GUIDE v2.5 18-Jul-2013 11:19:31
+% Last Modified by GUIDE v2.5 19-Jul-2013 19:57:36
 
 % Begin initialization code - DO NOT EDIT
 
 gui_Singleton = 1;
 gui_State = struct('gui_Name',       mfilename, ...
                    'gui_Singleton',  gui_Singleton, ...
-                   'gui_OpeningFcn', @Universal_GR_11_OpeningFcn, ...
-                   'gui_OutputFcn',  @Universal_GR_11_OutputFcn, ...
+                   'gui_OpeningFcn', @Universal_GR_12_OpeningFcn, ...
+                   'gui_OutputFcn',  @Universal_GR_12_OutputFcn, ...
                    'gui_LayoutFcn',  [] , ...
                    'gui_Callback',   []);
 if nargin && ischar(varargin{1})
@@ -45,10 +45,10 @@ end
 % End initialization code - DO NOT EDIT
 
 
-% --- Executes just before Universal_GR_11 is made visible.
-function Universal_GR_11_OpeningFcn(hObject, eventdata, handles, varargin)
+% --- Executes just before Universal_GR_12 is made visible.
+function Universal_GR_12_OpeningFcn(hObject, eventdata, handles, varargin)
 global CaSignal % ROIinfo ICA_ROIs
-% Choose default command line output for Universal_GR_11
+% Choose default command line output for Universal_GR_12
 handles.output = hObject;
 set (handles.primProc,'Value',1);
 set (handles.secProc,'Value',0);
@@ -98,7 +98,7 @@ set(handles.batchStartTrial, 'String', '1');
 set(handles.batchEndTrial, 'String', '1');
 set(handles.ROI_modify_button, 'Value', 0);
 set(handles.CurrentFrameNoEdit,'String',1);
-set(handles.nogopos,'String','18');
+set(handles.nogopos,'String','16');
 set(handles.gopos,'String','0 1.5 3 4.5 6 7.5');
 set(handles.SoloStartTrialNo,'Value',1);
 set(handles.SoloEndTrialNo,'Value',1);
@@ -132,12 +132,12 @@ handles.SoloEndTrial=1;
 % Update handles structure
 guidata(hObject, handles);
 
-% UIWAIT makes Universal_GR_11 wait for user response (see UIRESUME)
+% UIWAIT makes Universal_GR_12 wait for user response (see UIRESUME)
 % uiwait(handles.figure1);
 
 
 % --- Outputs from this function are returned to the command line.
-function varargout = Universal_GR_11_OutputFcn(hObject, eventdata, handles) 
+function varargout = Universal_GR_12_OutputFcn(hObject, eventdata, handles) 
 % varargout  cell array for returning output args (see VARARGOUT);
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -1168,7 +1168,7 @@ end
 CaTrials = CaSignal.CaTrials;
 save(CaSignal.results_fn, 'CaTrials','ICA_results','-v7.3');
 save(CaSignal.results_roiinfo, 'ROIinfo','-v7.3');
-% save(fullfile(CaSignal.results_path, ['ICA_ROIs_', FileName_prefix '.mat']), 'ICA_ROIs');
+save(fullfile(CaSignal.results_path, ['ICA_ROIs_', FileName_prefix '.mat']), 'ICA_ROIs');
 msg_str = sprintf('CaTrials Saved, with %d trials, %d ROIs', length(CaSignal.CaTrials), CaSignal.CaTrials(TrialNo).nROIs);
 disp(msg_str);
 set(handles.msgBox, 'String', msg_str);
@@ -2394,12 +2394,23 @@ cd (current_dir);
 
 
 function baseDataPath_Callback(hObject, eventdata, handles)
+% hObject    handle to baseDataPath (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of baseDataPath as text
+%        str2double(get(hObject,'String')) returns contents of baseDataPath as a double
 
 
 
 % --- Executes during object creation, after setting all properties.
 function baseDataPath_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to baseDataPath (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
 
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
@@ -2407,9 +2418,22 @@ end
 
 
 function nogopos_Callback(hObject, eventdata, handles)
+% hObject    handle to nogopos (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
 
+% Hints: get(hObject,'String') returns contents of nogopos as text
+%        str2double(get(hObject,'String')) returns contents of nogopos as a double
+
+
+% --- Executes during object creation, after setting all properties.
 function nogopos_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to nogopos (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
 
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
@@ -2417,12 +2441,22 @@ end
 
 
 function gopos_Callback(hObject, eventdata, handles)
+% hObject    handle to gopos (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
 
+% Hints: get(hObject,'String') returns contents of gopos as text
+%        str2double(get(hObject,'String')) returns contents of gopos as a double
 
 
 % --- Executes during object creation, after setting all properties.
 function gopos_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to gopos (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
 
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
@@ -2457,7 +2491,7 @@ function [gopos,nogopos]=Batch_whiskers_preprocess(basedatapath,coordsatfirst,co
     % load(list(1).name);
 
     %%
-    sessionInfo. bar_coordsall = barposmatall(:,[1,2]);
+ 	sessionInfo. bar_coordsall = barposmatall(:,[1,2]);
     sessionInfo.bar_coords = [];
     sessionInfo.bar_coords = barposmat(:,[1,2]);
 
@@ -2480,7 +2514,8 @@ function [gopos,nogopos]=Batch_whiskers_preprocess(basedatapath,coordsatfirst,co
       sessionInfo.goPosition_runmean(:,1) =solo_obj.goPosition_runmean;
       sessionInfo.goPosition_mean(1,1) =solo_obj.goPosition_mean;
       
-          sessionInfo.polePositions = solo_obj.polePositions;
+      sessionInfo.polePositions = solo_obj.polePositions;
+      
     name = ['SessionInfo_' solo_obj.mouseName '_' datestr(now,'mmddyy') ];
     save(name,'sessionInfo');
     'Made and saved SessionInfo'
@@ -2581,7 +2616,7 @@ function [barposmat,barposmatall]= prep(d,solo_obj,coordsatfirst,coordsatnext,ba
     ['no. whisker files =' num2str(length(whisknumind))]
     ['no. meas files =' num2str(length(measnumind))]
     ['length of barposmat =' num2str(length(barposmat))]
-    
+
 
 
 
@@ -2904,32 +2939,8 @@ function loadwSigsessionInfo_Callback(hObject, eventdata, handles)
     load( [pathName filesep filename], '-mat');
     [filename,pathName]=uigetfile('SessionInfo*.mat','Load SessionInfo.mat file');
     load( [pathName filesep filename],'-mat');
-    
-    bartheta_all=cellfun(@(x) x.mThetaNearBar,wSigTrials,'uniformoutput',false);
-    wSigfilenames =cellfun(@(x) x.trackerFileName(29:32),wSigTrials,'uniformoutput',false);
-    wSig_trials = str2num(char(wSigfilenames));
 
-    wSig_nogotrials=ismember(wSig_trials,sessionInfo.nogotrials);
-    temp = bartheta_all(wSig_nogotrials);
-    nogo_bartheta = nanmean(cell2mat(temp));
 
-    wSig_gotrials=ismember(wSig_trials,sessionInfo.gotrials);
-
-    go_bartheta = zeros(size(sessionInfo.gopos));
-
-    for k = 1: length( sessionInfo.gopos)
-       gotrials_at_currentpos = find(sessionInfo.bar_coords(:,1) == sessionInfo.gopix(k,1));   
-       go_bartheta (k) = nanmean(cell2mat(bartheta_all(gotrials_at_currentpos)));
-
-    end
-
-    sessionInfo.nogo_bartheta = nogo_bartheta;
-    sessionInfo.go_bartheta   = go_bartheta;
-    cd (pathName);
-    save(filename, 'sessionInfo');
-    
-    
-    
 % --- Executes on button press in plotwSigData.
 function plotwSigData_Callback(hObject, eventdata, handles)
 global sessionInfo
@@ -3806,6 +3817,8 @@ else
     load([pathName filesep filename]);
 end
 
+
+
 figure;
 
 [AX,H1,H2] = plotyy([1:solo_data.trialStartEnd(2)],solo_data.Dprime,[1:solo_data.trialStartEnd(2)],solo_data.PercentCorrect);hold on;
@@ -3962,8 +3975,7 @@ end
 function load_wSigSum_Callback(hObject, eventdata, handles)
 
     global wSigSummary
-    wSigSummary ={};
-   
+    wSigSummary = {};
     basedatapath = get(handles.wSigSum_datapath,'String');
     if(length(basedatapath)<10)
         basedatapath = '/Volumes/GR_Data_01/Data/';
@@ -3983,7 +3995,6 @@ function load_wSigSum_Callback(hObject, eventdata, handles)
       wSigSummary{count} = blocks;
  
     end
-%     wSigSummary = cell2struct(wSigSummary, 'tag','nogotrialnums','nogotrialnames','nogo_thetaenv_trials','gotrialnums','gotrialnames';
     folder = uigetdir;
     cd (folder);
     save('wSigSummary','wSigSummary');
@@ -4006,15 +4017,8 @@ function plot_wSigSum_Callback(hObject, eventdata, handles)
 global wSigSummary
 global wSigSum_Sessions
 
-wSigSum_Sessions = struct([]);
-
-biased_bartheta= str2num(get(handles.current_bartheta,'String'));
+bartheta= str2num(get(handles.current_bartheta,'String'));
 baseline_bartheta = str2num(get(handles.unbiased_bartheta,'String'));
-
-temp = cell2mat(cellfun(@(x) x.nogo_thetaenv_biased_barpos{1}{1},wSigSummary,'uniformoutput',false));
-biased_bartheta = mean(temp);
-temp = cell2mat(cellfun(@(x) x.nogo_thetaenv_baseline_barpos{1}{1},wSigSummary,'uniformoutput',false));
-baseline_bartheta = mean(temp);
 plotlist = get(handles.wSigSum_toplot,'String');
 datatoplot= plotlist{get(handles.wSigSum_toplot,'Value')};
 
@@ -4113,7 +4117,6 @@ for j= 1:numblocks
 
               count = count+binnedxdata(end)+10;
 
-       
     end
         axes(ah1); axis([0 count -40 40]);grid on; ylabel('Medianpole, Prepole and Peak(binned thetaenv)'); xlabel('Trials');
         
@@ -4174,7 +4177,6 @@ for j= 1:numblocks
    saveas(gcf,['allsessions_prcpastbarpos_bl ' blocklist{j}] ,'tif');  
    saveas(gcf,['allsessions_prcpastbarpos_bl' blocklist{j}],'fig');
 end
-
 % title([commentstr ' Block ' blocklist{j} ]);
  hold off;
  
@@ -4224,13 +4226,10 @@ for j= 1:numblocks
     axis([0 count -40 40]);grid on; ylabel('Mean thetaenv past barpos'); xlabel('Trials');
    saveas(gcf,['allsessions_meanpastbarpos_bl ' blocklist{j}] ,'tif');  
    saveas(gcf,['allsessions_meanpastbarpos_bl' blocklist{j}],'fig');
-    hold off;
-    plot_dist_sessions(commentstr,numsessions)
 end
 % title([commentstr ' Block ' blocklist{j} ]);
-
+ hold off;
  
-
  
 % % %   % plotting kurtosis
 % % % for j= 1:numblocks
@@ -4854,7 +4853,6 @@ end
 function unbiased_bartheta_Callback(hObject, eventdata, handles)
 
 
-
 % --- Executes during object creation, after setting all properties.
 function unbiased_bartheta_CreateFcn(hObject, eventdata, handles)
 
@@ -4925,6 +4923,64 @@ function baseline_meanbarpos_CreateFcn(hObject, eventdata, handles)
 
 % Hint: edit controls usually have a white background on Windows.
 %       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+function contact_Sig_datapath_Callback(hObject, eventdata, handles)
+
+
+% --- Executes during object creation, after setting all properties.
+function contact_Sig_datapath_CreateFcn(hObject, eventdata, handles)
+
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on button press in load_contactTrialsdata.
+function load_contactTrialsdata_Callback(hObject, eventdata, handles)
+  global CaSigSummary
+    CaSigSummary = {};
+    basedatapath = get(handles.contact_Sig_datapath,'String');
+    if(length(basedatapath)<10)
+        basedatapath = '/Volumes/GR_Data_05/Data/';
+    end
+    cd (basedatapath);
+    count=0;
+
+    while(count>=0)
+     [filename,pathName]=uigetfile('contact_CaTrial*.mat','Load contact_CaTrials*.mat file');
+        if isequal(filename, 0) || isequal(pathName,0)           
+           break
+        end
+       count=count+1;
+      load( [pathName filesep filename], '-mat'); 
+       set(handles.wSigSum_datapath,'String',pathName);
+       cd (pathName);
+      CaSigSummary{count} = contact_CaTrials;
+ 
+    end
+    folder = uigetdir;
+    cd (folder);
+    save('CaSigSummary','CaSigSummary');
+
+
+% --- Executes on button press in load_pooled_contact_Trials.
+function load_pooled_contact_Trials_Callback(hObject, eventdata, handles)
+
+
+% --- Executes on button press in plot_contactSig_sessions.
+function plot_contactSig_sessions_Callback(hObject, eventdata, handles)
+
+
+function plot_contactSigSum_title_Callback(hObject, eventdata, handles)
+
+
+% --- Executes during object creation, after setting all properties.
+function plot_contactSigSum_title_CreateFcn(hObject, eventdata, handles)
+
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
