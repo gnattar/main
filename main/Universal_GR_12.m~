@@ -4968,16 +4968,16 @@ global CaSigSum_Sessions
 
 contact_roistoplot = str2num(get(handles.CaSigSum_rois,'String'));
 numsessions=size(CaSigSummary,2);
-numrois = length(contact_roistoplot);
 trialtypes = 6; % nogo + 5 go pos % CaSigSummary{1,1}
 commentstr = get(handles.plot_contactSigSum_title,'String');
 
  % plot rois
-for j= 1:numrois
+
+    block =j;
     sc = get(0,'ScreenSize');
     figure('position', [1000, sc(4)/10-100, sc(3)*3/10, sc(4)*3/4], 'color','w'); %%raw theta
 %     title([commentstr 'Amplitude Block ' blocklist{j} 'Data ' 'Amp_med']);
-    title([commentstr 'Roi ' num2str(contact_roistoplot(j)) 'Trial types' ]);%blocklist{j} 'Data ' datatoplot]);
+    title([commentstr 'Percent past mean barpos ' ]);%blocklist{j} 'Data ' datatoplot]);
     hold on;
     count =0;
     prev=0;   
