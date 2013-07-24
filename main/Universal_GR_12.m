@@ -2604,8 +2604,10 @@ function [barposmat,barposmatall]= prep(d,solo_obj,coordsatfirst,coordsatnext,ba
     barposmatall = zeros(length(barpos),2);
     factor = coordsdiff/barposdiff;
     barposmatall(:,1) = repmat(coordsatfirst(1),length(barpos),1)- round((barpos(:,1)-barposatfirst(1))*factor(1)) ;
-    if(factor(2)~=1)
+    if(factor(2)~=1)&& (coordsatnext(2)>coordsatfirst(2))
         barposmatall(:,2) = repmat(coordsatnext(2),length(barpos),1)- round((barposatnext(1)-barpos(:,1))*factor(2));
+    elseif(factor(2)~=1)&& (coordsatnext(2)<coordsatfirst(2))
+        barposmatall(:,2) = repmat(coordsatnext(2),length(barpos),1)+ round((barposatnext(1)-barpos(:,1))*factor(2));
     else
         barposmatall(:,2) = coordsatfirst(2);
     end
@@ -3532,7 +3534,7 @@ end
     numcontacts =0;
     contact_CaTrials=struct('solo_trial',[],'dff',{},'ts',{},'FrameTime',{},'nframes',{},'trialtype',[],'trialCorrect',[],'FileName_prefix',{},'FileName',{},...
                                      'TrialName',{},   'licks', {},'poleposition',{},'nROIs',{},'theta',{},'kappa',{},...
-                                   'deltaKappa',{},'ts_wsk',{},'contactdir',{},'contacts',{},'barpos',[],'Setpoint',{},'Amplitude',{},'Velocity',{});
+                                   'deltaKappa',{},'ts_wsk',{},'contactdir',{},'contacts',{},'barpos',[],'Setpoint',{},'Amplitude',{},'Velocity',{},'total_dKappa',{});
     count=0;
     handles.aligned_contact = get(handles.align_to_first_touch,'Value'); % 1 for first 
     
@@ -3659,7 +3661,9 @@ end
 %             contact_CaTrials(count).contacts={contactind};
             contact_CaTrials(count).contacts={horzcat(contacttimes{i}{:})};
             contact_CaTrials(count).barpos = wSigTrials{wSig_tags(i)}.bar_pos_trial(1,1);%cellfun(@(x) x.bar_pos_trial(1,1), wSigTrials(wSig_tags),'uniformoutput',false);
-
+            contact_CaTrials(count).total_touchKappa = wSigTrials{wSig_tags(i)}.totalTouchKappaTrial (1,1); 
+            contact_CaTrials(count).max_touchKappa = wSigTrials{wSig_tags(i)}.maxTouchKappaTrial(1,1);
+  
             switch(Y(i))
                 case(1)
                     contact_CaTrials(count).trialtype = 'Hit';               
@@ -4975,15 +4979,14 @@ commentstr = get(handles.plot_contactSigSum_title,'String');
  % plot rois
 for j= 1:numrois
     sc = get(0,'ScreenSize');
-    figure('position', [1000, sc(4)/10-100, sc(3)*3/10, sc(4)*3/4], 'color','w'); %%raw theta
-%     title([commentstr 'Amplitude Block ' blocklist{j} 'Data ' 'Amp_med']);
-    title([commentstr 'Roi ' num2str(contact_roistoplot(j)) 'Trial types' ]);%blocklist{j} 'Data ' datatoplot]);
+    figure('position', [1000, sc(4)/10-100, sc(3)*3/10, sc(4)*3/4], 'color','w'); %% im and raw traces
+    title([commentstr 'Roi ' num2str(contact_roistoplot(j)) 'Trial types' ]);
     hold on;
     count =0;
     prev=0;   
     for i = 1:numsessions
-
-           selecteddata = strrep(datatoplot,'data','prcpastmeanbar');
+       current_sess_obj = CaSigSummary{1,i};    
+       selecteddata = strrep(datatoplot,'data','prcpastmeanbar');
            temp = getfield(wSigSummary{i},selecteddata); 
            temp = temp{1};
          
@@ -5042,7 +5045,11 @@ end
 
 
 function CaSigSum_rois_Callback(hObject, eventdata, handles)
-
+contact_roistoplot = str2num(get(handles.CaSigSum_rois,'String'));
+if(length(contact_roistoplot)>5)
+    msgbox('Cant handle more than 5 rois at a time, chosing the first five');
+    contact_roistoplot = contact_roistoplot(1:5);
+end   
 
 % --- Executes during object creation, after setting all properties.
 function CaSigSum_rois_CreateFcn(hObject, eventdata, handles)

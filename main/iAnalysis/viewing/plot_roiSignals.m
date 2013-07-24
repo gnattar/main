@@ -10,6 +10,7 @@ if (strcmp(sfx , 'Csort') || strcmp(sfx , 'CSort_barpos'))
     dKappa = cell2mat(arrayfun(@(x) x.deltaKappa{1}, obj,'uniformoutput',false)');
     velocity =cell2mat(arrayfun(@(x) x.Velocity{1}, obj,'uniformoutput',false)');
     ts_wsk = cell2mat(arrayfun(@(x) x.ts_wsk{1}, obj,'uniformoutput',false)');
+    totalTouchKappa = cell2mat(arrayfun(@(x) x.total_touchKappa, obj,'uniformoutput',false)');
 end
 
 numtrials = length(rois_trials);
@@ -141,6 +142,7 @@ rois_name_tag = '';
                         temp_dKappa = dKappa(trials_ktype,:);
                         temp_velocity = velocity(trials_ktype,:);
                         temp_ts_wsk = ts_wsk(trials_ktype,:);
+                        temp_totalTouchKappa = totalTouchKappa(trials_ktype,:);
 % % %                         [all_data,detected] = detect_Ca_events(temp_data,frametime,180);
 % % %                         detected_data= all_data(find(detected),:);
 % % %                         detected_ts_wsk =  temp_ts_wsk(find(detected),:);
@@ -149,19 +151,19 @@ rois_name_tag = '';
 % % %                         detected_velocity = temp_velocity(find(detected),time_ind);
 
                         max_dFF=zeros(size(temp_data,1),1);
-                        total_dKappa = zeros(size(temp_data,1),1);
-
+%                         total_dKappa = zeros(size(temp_data,1),1);
+                         
                          max_dFF=max(temp_data,[],2);
-                        total_dKappa =  sum(temp_dKappa,2);
+%                         total_dKappa =  sum(temp_dKappa,2);
                         total_velocity = sum(temp_velocity,2);
 
     %                      plot(total_dKappa,max_dFF,'Marker','o','color',col(types(k),:),'Markersize',6);
-                          scatter(total_dKappa,max_dFF,80,col(types(k),:),'fill');
+                          scatter(temp_totalTouchKappa,max_dFF,80,col(types(k),:),'fill');
 %                           set(gca,'Xscale','log');
                           P=polyfit(total_dKappa,max_dFF,1);
                           yfit = P(1)*total_dKappa + P(2);
                           hold on; 
-                          plot(total_dKappa,yfit,'color',col(types(k),:),'linewidth',2);hold off;
+                          plot(temp_totalTouchKappa,yfit,'color',col(types(k),:),'linewidth',2);hold off;
                           grid on;xlabel('total_dKappa'); ylabel('peak_dFF');
                           legend(['b=' num2str(P(1))]);
                           
