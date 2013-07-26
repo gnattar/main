@@ -1168,7 +1168,7 @@ end
 CaTrials = CaSignal.CaTrials;
 save(CaSignal.results_fn, 'CaTrials','ICA_results','-v7.3');
 save(CaSignal.results_roiinfo, 'ROIinfo','-v7.3');
-% save(fullfile(CaSignal.results_path, ['ICA_ROIs_', FileName_prefix '.mat']), 'ICA_ROIs');
+save(fullfile(CaSignal.results_path, ['ICA_ROIs_', FileName_prefix '.mat']), 'ICA_ROIs');
 msg_str = sprintf('CaTrials Saved, with %d trials, %d ROIs', length(CaSignal.CaTrials), CaSignal.CaTrials(TrialNo).nROIs);
 disp(msg_str);
 set(handles.msgBox, 'String', msg_str);
@@ -3736,7 +3736,7 @@ function contactdetect_Callback(hObject, eventdata, handles)
     end
     
     wSigTrials =wsArray.ws_trials;
-    obj = NX_WhiskerSignalTrialArray([],wSigTrials);
+        obj = NX_WhiskerSignalTrialArray([],wSigTrials);
     wsArray = obj;
     
    for i = 1:wsArray.nTrials     

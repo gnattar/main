@@ -34,14 +34,17 @@ classdef NX_WhiskerSignalTrialArray
                     obj.mouseName = sessionInfo.mouseName;
                     obj.sessionName = sessionInfo.sessionName;
                     obj.pxPerMm = sessionInfo.pxPerMm;
+%                     obj=get_totTouchKappa_trial(obj);
                     %             obj.bar_time_window = ws_trials{1}.bar_time_win;
                 else
                     obj.mouseName = ws_trials{1}.mouseName;%GRchange
                     obj.sessionName = ws_trials{1}.sessionName';%GRchange
                     obj.pxPerMm = ws_trials{1}.pxPerMm;
                     obj=get_totTouchKappa_trial(obj);
+
                 end
             end
+            return 
         end
         
         function obj = get_totTouchKappa_trial(obj)

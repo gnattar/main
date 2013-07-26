@@ -121,7 +121,8 @@ while count < barFrame_inds(end) - 1
             for k = 1: nExtraFrames
                 % relax a few frames but make sure not
                 % overlaping with other contact periods.
-                if (nContacts <1 && p1>1) || (p1-1>contact_inds{nContacts}(end))
+                if (nContacts <1 && p1>=1) 
+                    
                     % Criteria 1, change in deltaKappa
                     if touch_direc == 1 && (deltaKappa(p1) < deltaKappa(p1+1) && deltaKappa(p1) > deltaKappa(p1-1))
                         p1 = p1-1;
@@ -130,6 +131,19 @@ while count < barFrame_inds(end) - 1
                         p1 = p1-1;
 %                         aux_criteria1 = (deltaKappa(p1-1) - deltaKappa(p1) <= -ka_diff_mean) && (deltaKappa(p1-1) > ka_bs);
                     end
+                    
+                    
+                elseif  (p1-1>contact_inds{nContacts}(end))
+              
+                    % Criteria 1, change in deltaKappa
+                    if touch_direc == 1 && (deltaKappa(p1) < deltaKappa(p1+1) && deltaKappa(p1) > deltaKappa(p1-1))
+                        p1 = p1-1;
+%                         aux_criteria1 = (deltaKappa(p1-1) - deltaKappa(p1) >= ka_diff_mean) && (deltaKappa(p1-1) < ka_bs);
+                    elseif touch_direc == 0 && (deltaKappa(p1) < deltaKappa(p1+1) && deltaKappa(p1) > deltaKappa(p1-1))
+                        p1 = p1-1;
+%                         aux_criteria1 = (deltaKappa(p1-1) - deltaKappa(p1) <= -ka_diff_mean) && (deltaKappa(p1-1) > ka_bs);
+                    end
+                    
                     % Criteria 2, stability in distance
 %                     aux_criteria2 = dToBar(p1-1) - dToBar(p1) <= 0.0389*2 && dToBar(p1-1) - dToBar(p1) > -0.0389*10;
 %                     aux_criteria3 = dToBar(p1-1) - dToBar(p1) < 0.3;

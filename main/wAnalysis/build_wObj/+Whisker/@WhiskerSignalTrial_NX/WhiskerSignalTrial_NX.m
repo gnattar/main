@@ -33,6 +33,7 @@ classdef WhiskerSignalTrial_NX < Whisker.WhiskerSignalTrial
         Setpoint
         Amplitude
         Velocity
+        
     end
     
     methods (Access = public)

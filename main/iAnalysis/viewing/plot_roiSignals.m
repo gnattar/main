@@ -1,6 +1,6 @@
 function plot_roiSignals(obj,fov,rois,roislist,tag_trialtypes,trialtypes,sfx,nam)
 % plot signals arranged by rois : to check roi selection in fovs
-roisperfig = 4;
+roisperfig = 5;
 
 fovname = [nam 'fov ' fov 'rois ' roislist]; 
 frametime=obj.FrameTime;
@@ -83,7 +83,7 @@ rois_name_tag = '';
                      hold on;  
                     end   
                     xlabel('Time (s)'); ylabel('dFF');
-                    axis([0 ts(length(ts)) -100 800]);set(gca,'YMinorTick','on','YTick', -200:100:800);
+                    axis([0 ts(length(ts)) -100 800]);set(gca,'YMinorTick','on','YTick', -100:100:800);
                     vline([ .5 1 1.5 2 2.5],'k-');
                 end
 
@@ -120,7 +120,7 @@ rois_name_tag = '';
 %                     plot([frametime:frametime:length(detected_avg)*frametime] ,detected_avg,'color',col(types(k),:),'linewidth',1.5);           
                     plot([frametime:frametime:length(alltrials_avg)*frametime] ,alltrials_avg,'color',col(types(k),:),'linewidth',1.5);           
 
-                   axis([0 ts(length(ts)) -50 600]);set(gca,'YMinorTick','on','YTick', -200:100:600);xlabel('Time(s)'); ylabel('mean_dFF');
+                   axis([0 ts(length(ts)) -10 max(alltrials_avg)+100]);set(gca,'YMinorTick','on','YTick', -200:100:600);xlabel('Time(s)'); ylabel('mean_dFF');
 
                     vline([.5 1 1.5 2 2.5],'k-');
                     legend([ num2str(sum(detected,1)) '/' num2str(size(all_data,1)) '(' num2str(sum(detected,1)/size(all_data,1)) ')'],'Location','NorthEast');
@@ -156,18 +156,21 @@ rois_name_tag = '';
                          max_dFF=max(temp_data,[],2);
 %                         total_dKappa =  sum(temp_dKappa,2);
                         total_velocity = sum(temp_velocity,2);
-
+                          [X, outliers_idx] = outliers(temp_totalTouchKappa.*max_dFF);
     %                      plot(total_dKappa,max_dFF,'Marker','o','color',col(types(k),:),'Markersize',6);
-                          scatter(temp_totalTouchKappa,max_dFF,80,col(types(k),:),'fill');
+                          scatter(temp_totalTouchKappa,max_dFF,80,col(types(k),:),'fill');hold on;
+                          plot(temp_totalTouchKappa(outliers_idx),max_dFF(outliers_idx),'*','color',[1,1,1],'MarkerSize',6);
 %                           set(gca,'Xscale','log');
-                          P=polyfit(total_dKappa,max_dFF,1);
-                          yfit = P(1)*total_dKappa + P(2);
+                          temp_totalTouchKappa(outliers_idx) = [];
+                          max_dFF(outliers_idx)=[];
+                          P=polyfit(temp_totalTouchKappa,max_dFF,1);
+                          yfit = P(1)*temp_totalTouchKappa + P(2);
                           hold on; 
                           plot(temp_totalTouchKappa,yfit,'color',col(types(k),:),'linewidth',2);hold off;
                           grid on;xlabel('total_dKappa'); ylabel('peak_dFF');
                           legend(['b=' num2str(P(1))]);
                           
-                          axis([min(total_dKappa)-50 max(total_dKappa)+50 -50 1000 ]); set(gca,'YMinorTick','on','YTick', 0:100:1000);
+                          axis([min(temp_totalTouchKappa)-1 max(temp_totalTouchKappa)+1 -10 max(max_dFF) ]); set(gca,'YMinorTick','on','YTick', 0:100:1000);
     %                     vline([.5 1 1.5 2 2.5],'k-');
                           
 
