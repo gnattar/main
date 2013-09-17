@@ -29,9 +29,10 @@ for i= 1:numtrials
       
 end
 cscale=[0 300];
-col = [0 0 1; 0 .5 1; 0 1 1; 1 0 0;.5 0 0 ;.5 1 .5;1 1 0];
-scaledcol = [38;76;113;263;300;151;188];
-
+% col = [0 0 1; 0 .5 1; 0 1 1; 1 0 0;.5 0 0 ;.5 1 .5;1 1 0];
+% scaledcol = [38;76;113;263;300;151;188];
+    col = [0 0 .5 ;0 0 1; 0 .5 1; 1 .44 0; 1 0 0;.5 0 0 ;.5 1 .5]; %[0 0 1; 0 .5 1;.5 .5 1; 1 0 0;.5 0 0 ;0 0 0];
+    scaledcol = [1;38;76;230;263;300;151];
 if(tag_trialtypes ==1)
     temp = permute(temprois,[3,2,1]);
     newrois=zeros(size(temp,1),size(temp,2)+1,size(temp,3));
@@ -54,9 +55,9 @@ roicount = 1;
 count =1;count1=1;
 sc = get(0,'ScreenSize');
 % h1 = figure('position', [1000, sc(4)/10-100, sc(3)*3/10, sc(4)*3/4], 'color','w');
-h1 = figure('position', [1000, sc(4)/10-100, sc(3), sc(4)*1/2], 'color','w');
+h1 = figure('position', [1000, sc(4)/10-100, sc(3), sc(4)], 'color','w');
  ah1=axes('Parent',h1); title( 'Ca_Signal traces' );
-h2 = figure('position', [300, sc(4)/10-100, sc(3), sc(4)*1/2], 'color','w');
+h2 = figure('position', [300, sc(4)/10-100, sc(3), sc(4)], 'color','w');
  ah2=axes('Parent',h2); title('dFF vs. totalKappa' );
 rois_name_tag = '';
     for i = 1:length(rois)
@@ -227,9 +228,9 @@ rois_name_tag = '';
             
             if (roicount<length(rois))
     %        h1 = figure('position', [1000, sc(4)/10-100, sc(3)*3/10, sc(4)*3/4], 'color','w');
-            h1 = figure('position', [1000, sc(4)/10-100, sc(3), sc(4)*1/2], 'color','w');
+            h1 = figure('position', [1000, sc(4)/10-100, sc(3), sc(4)], 'color','w');
              ah1=axes('Parent',h1); title( 'Ca_Signal traces' );
-            h2 = figure('position', [300, sc(4)/10-100, sc(3), sc(4)*1/2], 'color','w');
+            h2 = figure('position', [300, sc(4)/10-100, sc(3), sc(4)], 'color','w');
              ah2=axes('Parent',h2); title('dFF vs. totalKappa' );
                 count =1;count1=1;
                 rois_name_tag = '';
